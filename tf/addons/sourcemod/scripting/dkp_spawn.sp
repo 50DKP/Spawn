@@ -127,7 +127,7 @@ public Action:Command_Spawn_Cow(client, args)
 	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working?
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a cow!");
-	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a cow", client);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a cow", client);
 	return Plugin_Continue;
 }
 
@@ -166,7 +166,7 @@ public Action:Command_Spawn_Explosive_Barrel(client, args)
 	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned an explosive barrel!");
-	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned an explosive barrel", client);
+	LogAction(client, client, "[Spawn] \"%L\" spawned an explosive barrel", client);
 	return Plugin_Continue;
 }
 
@@ -238,7 +238,7 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s ammopack!", ammosize);
-	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a %s ammopack", client, ammosize);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, ammosize);
 	return Plugin_Continue;
 }
 
@@ -311,7 +311,7 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s medipack!", healthsize);
-	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a %s medipack", client, healthsize);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a %s medipack", client, healthsize);
 	return Plugin_Continue;
 }
 
@@ -394,7 +394,7 @@ public Action:Command_Spawn_Sentry(client, args/*, level*/)
 		SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", 1.0);
 
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" a level %i sentry", client, level);
+		LogAction(client, client, "[Spawn] \"%L\" a level %i sentry", client, level);
 	}
 	else
 	{
@@ -491,7 +491,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 		SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);		
 
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a level %i dispenser", client, level);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
 	}
 	else
 	{
@@ -563,7 +563,7 @@ public Action:Command_Spawn_Merasmus(client, args)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned Merasmus with %i health!", HP);
-	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned Merasmus", client);
+	LogAction(client, client, "[Spawn] \"%L\" spawned Merasmus", client);
 	return Plugin_Continue;
 }
 
@@ -635,7 +635,7 @@ public Action:Command_Spawn_Monoculus(client, args)
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a level %i Monoculus", client, level);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
 	}
 	else
 	{
@@ -673,7 +673,7 @@ public Action:Command_Spawn_Horsemann(client, args)
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned the HHHH Jr!");
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned the HHHH Jr", client);
+		LogAction(client, client, "[Spawn] \"%L\" spawned the HHHH Jr", client);
 	}
 	else
 	{
@@ -711,7 +711,7 @@ public Action:Command_Spawn_Tank(client, args)
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a tank!");
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a tank", client);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
 	}
 	else
 	{
@@ -749,7 +749,7 @@ public Action:Command_Spawn_Zombie(client, args)
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a zombie!");
-		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a zombie", client);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a zombie", client);
 	}
 	else
 	{
