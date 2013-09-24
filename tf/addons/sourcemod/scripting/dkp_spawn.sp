@@ -1,5 +1,4 @@
 //TODO:  SLAYING/REMOVING, MENUS
-//Proposed color:  Vintage?
 //Thanks to abrandnewday, DarthNinja, HL-SDK, and X3Mano for your plugins that were so helpful to me in writing my plugin!
 //Changelog is at the very bottom.
 
@@ -13,7 +12,7 @@
 #include <adminmenu>
 #include <morecolors>
 
-#define PLUGIN_VERSION "1.0.0 Beta 5"
+#define PLUGIN_VERSION "1.0.0 Beta 6"
 #define MAXENTITIES 256
 
 new Handle:Merasmus_Base_HP=INVALID_HANDLE;
@@ -66,7 +65,7 @@ public OnPluginStart()
 	HookEvent("eyeball_boss_summoned", Event_Monoculus_Summoned, EventHookMode_Pre);
 	HookEvent("player_team", Event_Player_Change_Team, EventHookMode_Post);
 
-	new Handle:topmenu;
+	new Handle:topmenu=INVALID_HANDLE;
 	if (LibraryExists("adminmenu") && ((topmenu=GetAdminTopMenu())!=INVALID_HANDLE))
 	{
 		OnAdminMenuReady(topmenu);
@@ -97,26 +96,26 @@ public Action:Command_Spawn_Cow(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	new entity=CreateEntityByName("prop_dynamic_override");
 	if(!IsValidEntity(entity))
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 	SetEntityModel(entity, "models/props_2fort/cow001_reference.mdl");
@@ -127,8 +126,8 @@ public Action:Command_Spawn_Cow(client, args)
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
 	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working?
 
-	CReplyToCommand(client,"[Spawn] You spawned a cow!");
-	LogAction(client, client, "[Spawn] \"%L\" spawned a cow", client);
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a cow!");
+	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a cow", client);
 	return Plugin_Continue;
 }
 
@@ -136,26 +135,26 @@ public Action:Command_Spawn_Explosive_Barrel(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	new entity=CreateEntityByName("prop_physics");
 	if(!IsValidEntity(entity))
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 	SetEntityModel(entity, "models/props_c17/oildrum001_explosive.mdl");
@@ -166,8 +165,8 @@ public Action:Command_Spawn_Explosive_Barrel(client, args)
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
 	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);
 
-	CReplyToCommand(client,"[Spawn] You spawned an explosive barrel!");
-	LogAction(client, client, "[Spawn] \"%L\" spawned an explosive barrel", client);
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned an explosive barrel!");
+	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned an explosive barrel", client);
 	return Plugin_Continue;
 }
 
@@ -175,20 +174,20 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	new entity=CreateEntityByName("item_ammopack_full");
 	if(!IsValidEntity(entity))
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
@@ -199,7 +198,7 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	}
 	else if (args>1)
 	{
-		CReplyToCommand(client, "[Spawn] Format: spawn_ammopack <large|medium|small>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_ammopack <large|medium|small>");
 		return Plugin_Handled;
 	}
 
@@ -217,19 +216,19 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	}
 	else if(args==1)
 	{
-		CReplyToCommand(client, "[Spawn] Since you decided not to use the given options, the ammopack size has been set to large.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the ammopack size has been set to large.");
 		entity=CreateEntityByName("item_ammopack_full");
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
@@ -238,8 +237,8 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-	CReplyToCommand(client,"[Spawn] You spawned a %s ammopack!", ammosize);
-	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, ammosize);
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s ammopack!", ammosize);
+	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a %s ammopack", client, ammosize);
 	return Plugin_Continue;
 }
 
@@ -247,20 +246,20 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	new entity=CreateEntityByName("item_healthkit_full");
 	if(!IsValidEntity(entity))
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
@@ -271,7 +270,7 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] Format: spawn_medipack <large|medium|small>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_medipack <large|medium|small>");
 		return Plugin_Handled;
 	}
 
@@ -289,19 +288,19 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	}
 	else if(args==1)
 	{
-		CReplyToCommand(client, "[Spawn] Since you decided not to use the given options, the medipack size has been set to large.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the medipack size has been set to large.");
 		entity=CreateEntityByName("item_healthkit_full");
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
@@ -311,31 +310,28 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
-	CReplyToCommand(client,"[Spawn] You spawned a %s medipack!", healthsize);
-	LogAction(client, client, "[Spawn] \"%L\" spawned a %s medipack", client, healthsize);
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s medipack!", healthsize);
+	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a %s medipack", client, healthsize);
 	return Plugin_Continue;
 }
 
 /*==========BUILDINGS==========*/
 public Action:Command_Spawn_Sentry(client, args/*, level*/)
 {
-	new Float:fBuildMaxs[]={24.0, 24.0, 66.0};
-	new Float:fMdlWidth[]={1.0, 0.5, 0.0};
-	new Float:angles[3];
-	GetClientEyeAngles(client, angles);
-	new String:model[64];
+	decl String:model[64];
 	new team=GetClientTeam(client);
 	new shells, health, rockets;
 	new level=1;
+
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
@@ -346,13 +342,13 @@ public Action:Command_Spawn_Sentry(client, args/*, level*/)
 		level=StringToInt(sentrylevel);
 		if(level<1 || level>4)
 		{
-			CReplyToCommand(client, "[Spawn] Haha, no.  The sentry's level has been set to 1.  Good try, though.");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  The sentry's level has been set to 1.  Good try, though.");
 			level=1;
 		}
 	}
 	else if(args>1)
 	{
-		CReplyToCommand(client, "[Spawn] Format: spawn_sentry <1|2|3>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_sentry <1|2|3>");
 		return Plugin_Handled;
 	}
 
@@ -364,9 +360,9 @@ public Action:Command_Spawn_Sentry(client, args/*, level*/)
 	}
 	else if(level==2)
 	{
-		model="models/buildables/sentry2.mdl";
-		shells=120;
-		health=180;
+        model="models/buildables/sentry2.mdl";
+        shells=120;
+        health=180;
 	}
 	else if(level==3)
 	{
@@ -375,88 +371,61 @@ public Action:Command_Spawn_Sentry(client, args/*, level*/)
 		health=216;
 		rockets=20;
 	}
+
+	new entity=CreateEntityByName("obj_sentrygun");
+	if(IsValidEntity(entity))
+	{
+		DispatchSpawn(entity);
+		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+		SetEntityModel(entity, model);
+
+		SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
+		SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
+		SetEntProp(entity, Prop_Send, "m_iAmmoShells", shells);
+		SetEntProp(entity, Prop_Send, "m_iAmmoRockets", rockets);
+		SetEntProp(entity, Prop_Send, "m_health", health);
+		SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
+		SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
+		SetEntProp(entity, Prop_Send, "m_iState", 1);
+		SetEntProp(entity, Prop_Send, "m_teamNum", team);
+		SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
+		SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
+		SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
+		SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", 1.0);
+
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" a level %i sentry", client, level);
+	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The level was invalid!  That shouldn't be happening.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
-	new entity=CreateEntityByName("obj_sentrygun");
-	if(!IsValidEntity(entity))
-	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
-		return Plugin_Handled;
-	}
-	DispatchSpawn(entity);
-	TeleportEntity(entity, position, angles, NULL_VECTOR);
-	SetEntityModel(entity, model);
-
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_flAnimTime"), 51, 4 , true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_nNewSequenceParity"), 4, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_nResetEventsParity"), 4, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_ammoShells"), shells, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_iMaxHealth"), health, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_health"), health, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_bBuilding"), 0, 2, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_bPlacing"), 0, 2, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_bDisabled"), 0, 2, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_iObjectType"), 3, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_iState"), 1, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_iUpgradeMetal"), 0, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_bHasSapper"), 0, 2, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_nSkin"), (team-2), 1, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_bServerOverridePlacement"), 1, 1, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_iUpgradeLevel"), level, 4, true);
-	SetEntData(entity, FindSendPropOffs("CObjectSentrygun", "m_ammoRockets"), rockets, 4, true);
-
-	SetEntDataEnt2(entity, FindSendPropOffs("CObjectSentrygun", "m_nSequence"), 0, true);
-	SetEntDataEnt2(entity, FindSendPropOffs("CObjectSentrygun", "m_hclient"), client, true);
-
-	SetEntDataFloat(entity, FindSendPropOffs("CObjectSentrygun", "m_flCycle"), 0.0, true);
-	SetEntDataFloat(entity, FindSendPropOffs("CObjectSentrygun", "m_flPlaybackRate"), 1.0, true);
-	SetEntDataFloat(entity, FindSendPropOffs("CObjectSentrygun", "m_flPercentageConstructed"), 1.0, true);
-	
-	SetEntDataVector(entity, FindSendPropOffs("CObjectSentrygun", "m_vecOrigin"), position, true);
-	SetEntDataVector(entity, FindSendPropOffs("CObjectSentrygun", "m_angRotation"), angles, true);
-	SetEntDataVector(entity, FindSendPropOffs("CObjectSentrygun", "m_vecBuildMaxs"), fBuildMaxs, true);
-	SetEntDataVector(entity, FindSendPropOffs("CObjectSentrygun", "m_flModelWidthScale"), fMdlWidth, true);
-
-	SetVariantInt(team);
-	AcceptEntityInput(entity, "TeamNum", -1, -1, 0);
-
-	SetVariantInt(team);
-	AcceptEntityInput(entity, "SetTeam", -1, -1, 0);
-
-	CReplyToCommand(client, "[Spawn] You spawned a level %i sentry!", level);
-	LogAction(client, client, "[Spawn] \"%L\" a level %i sentry", client, level);
 	return Plugin_Continue;
 }
 
 public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 {
-	new Float:angles[3];
 	new String:model[100];
-	decl String:name[60];
-	GetClientName(client, name, sizeof(name));
-	GetClientEyeAngles(client, angles);
 	new team=GetClientTeam(client);
 	new health;
 	new ammo=400;
 	new level=1;
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
@@ -467,13 +436,13 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 		level=StringToInt(dispenserlevel);
 		if(level<1 || level>4)
 		{
-			CReplyToCommand(client, "[Spawn] Haha, no.  The dispenser's level has been set to 1.  Good try though.");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  The dispenser's level has been set to 1.  Good try though.");
 			level=1;
 		}
 	}
 	else if(args>1)
 	{
-		CReplyToCommand(client, "[Spawn] Format: spawn_dispenser <1|2|3>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_dispenser <1|2|3>");
 		return Plugin_Handled;
 	}
 
@@ -494,7 +463,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The level was invalid!  This shouldn't be happening.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The level was invalid!  This shouldn't be happening.");
 		return Plugin_Handled;
 	}
 
@@ -502,7 +471,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 	if(IsValidEntity(entity))
 	{
 		DispatchSpawn(entity);
-		TeleportEntity(entity, position, angles, NULL_VECTOR);
+		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 		SetEntityModel(entity, model);
 
 		SetVariantInt(team);
@@ -521,12 +490,12 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 		SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", 1.0);
 		SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);		
 
-		CReplyToCommand(client, "[Spawn] You spawned a level %i dispenser!", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a level %i dispenser", client, level);
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -541,7 +510,7 @@ public Action:Command_Spawn_Merasmus(client, args)
 	HP=merasmus_health+(merasmus_health_per_player*peopleConnected);
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
@@ -551,32 +520,32 @@ public Action:Command_Spawn_Merasmus(client, args)
 		HP=StringToInt(health);
 		if(HP<=0)
 		{
-			CReplyToCommand(client, "[Spawn] Haha, no.  Merasmus's health has been set to the default value.  Good try though.");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  Merasmus's health has been set to the default value.  Good try though.");
 			HP=merasmus_health+(merasmus_health_per_player*peopleConnected);
 		}
 	}
 	else if(args>1)
 	{
-		CReplyToCommand(client, "[Spawn] Format: spawn_merasmus <health>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_merasmus <health>");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
 	new entity=CreateEntityByName("merasmus");
 	if(!IsValidEntity(entity))
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
@@ -587,14 +556,14 @@ public Action:Command_Spawn_Merasmus(client, args)
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] Merasmus' health was below 1!  That shouldn't be happening.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Merasmus' health was below 1!  That shouldn't be happening.");
 		return Plugin_Handled;
 	}
 	DispatchSpawn(entity);
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-	CReplyToCommand(client, "[Spawn] You spawned Merasmus with %i health!", HP);
-	LogAction(client, client, "[Spawn] \"%L\" spawned Merasmus", client);
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned Merasmus with %i health!", HP);
+	LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned Merasmus", client);
 	return Plugin_Continue;
 }
 
@@ -602,19 +571,19 @@ public Action:Command_Spawn_Monoculus(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
@@ -629,13 +598,13 @@ public Action:Command_Spawn_Monoculus(client, args)
 			level=StringToInt(buffer);
 			if(level<=0)
 			{
-				CReplyToCommand(client, "[Spawn] Haha, no.  Monoculus's level has been set to 1.  Good try though.");
+				CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  Monoculus's level has been set to 1.  Good try though.");
 				level=1;
 			}
 		}
 		else if(args>1)
 		{
-			CReplyToCommand(client, "[Spawn] Format: spawn_monoculus <level>");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_monoculus <level>");
 			return Plugin_Handled;
 		}
 
@@ -658,19 +627,19 @@ public Action:Command_Spawn_Monoculus(client, args)
 		}
 		else if(level<=0)
 		{
-			CReplyToCommand(client, "[Spawn] Monoculus' level was below 1!  That shouldn't be happening.");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Monoculus' level was below 1!  That shouldn't be happening.");
 			return Plugin_Handled;
 		}
 		DispatchSpawn(entity);
 		position[2]-=10.0;
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-		CReplyToCommand(client,"[Spawn] You spawned a level %i Monoculus!", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a level %i Monoculus", client, level);
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -680,19 +649,19 @@ public Action:Command_Spawn_Horsemann(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
@@ -703,12 +672,12 @@ public Action:Command_Spawn_Horsemann(client, args)
 		position[2]-=10.0;
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-		CReplyToCommand(client, "[Spawn] You spawned the HHHH Jr!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned the HHHH Jr", client);
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned the HHHH Jr!");
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned the HHHH Jr", client);
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -718,19 +687,19 @@ public Action:Command_Spawn_Tank(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
@@ -741,12 +710,12 @@ public Action:Command_Spawn_Tank(client, args)
 		position[2] -= 10.0;
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-		CReplyToCommand(client,"[Spawn] You spawned a tank!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a tank!");
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a tank", client);
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -756,19 +725,19 @@ public Action:Command_Spawn_Zombie(client, args)
 {
 	if(client<1)
 	{
-		CReplyToCommand(client, "[Spawn] This command must be used in-game and without RCON.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
 	if(!SetTeleportEndPoint(client))
 	{
-		CReplyToCommand(client, "[Spawn] Could not find the spawn point.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
 		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
-		CReplyToCommand(client, "[Spawn] Too many entities have been spawned, reload the map.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
 		return Plugin_Handled;
 	}
 
@@ -779,12 +748,12 @@ public Action:Command_Spawn_Zombie(client, args)
 		position[2]-=10.0;
 		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-		CReplyToCommand(client,"[Spawn] You spawned a zombie!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned a zombie", client);
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a zombie!");
+		LogAction(client, client, "{Vintage}[Spawn]{Default} \"%L\" spawned a zombie", client);
 	}
 	else
 	{
-		CReplyToCommand(client, "[Spawn] The entity was invalid!");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -901,7 +870,7 @@ public MenuHandler(Handle:menu, MenuAction:action, client, param2)
 		}
 		else
 		{
-			CReplyToCommand(client, "[Spawn] Something went horribly wrong!");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went horribly wrong!");
 		}
 		Create_Menu(client);
 	}
@@ -918,26 +887,26 @@ public OnAdminMenuReady(Handle:topmenu)
 /*==========TECHNICAL STUFF==========*/
 SetTeleportEndPoint(client)
 {
-	decl Float:vAngles[3];
-	decl Float:vOrigin[3];
-	decl Float:vBuffer[3];
-	decl Float:vStart[3];
-	decl Float:Distance;
+	decl Float:angles[3];
+	decl Float:origin[3];
+	decl Float:buffer[3];
+	decl Float:start[3];
+	decl Float:distance;
 
-	GetClientEyePosition(client, vOrigin);
-	GetClientEyeAngles(client, vAngles);
+	GetClientEyePosition(client, origin);
+	GetClientEyeAngles(client, angles);
 
-	new Handle:trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer);
+	new Handle:trace = TR_TraceRayFilterEx(origin, angles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer);
 
 	if(TR_DidHit(trace))
 	{
-		TR_GetEndPosition(vStart, trace);
-		GetVectorDistance(vOrigin, vStart, false);
-		Distance=-35.0;
-		GetAngleVectors(vAngles, vBuffer, NULL_VECTOR, NULL_VECTOR);
-		position[0]=vStart[0]+(vBuffer[0]*Distance);
-		position[1]=vStart[1]+(vBuffer[1]*Distance);
-		position[2]=vStart[2]+(vBuffer[2]*Distance);
+		TR_GetEndPosition(start, trace);
+		GetVectorDistance(origin, start, false);
+		distance=-35.0;
+		GetAngleVectors(angles, buffer, NULL_VECTOR, NULL_VECTOR);
+		position[0]=start[0]+(buffer[0]*distance);
+		position[1]=start[1]+(buffer[1]*distance);
+		position[2]=start[2]+(buffer[2]*distance);
 	}
 	else
 	{
@@ -1526,16 +1495,17 @@ PrecacheZombie()
 	PrecacheModel("models/player/items/spy/spy_zombie.mdl", true);
 }
 
-/*==========HELP COMMAND==========*/
+/*==========HELP==========*/
 public Action:Command_Spawn_Help(client, args)
 {
-	CReplyToCommand(client, "[Spawn] Available entities (append the name to spawn_):  cow, explosive_barrel, ammopack <large|medium|small>, medipack <large|medium|small>, sentry <1|2|3>, dispenser <1|2|3>, merasmus <health>, monoculus <level>, horsemann, tank, zombie");
-	return Plugin_Handled;
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Available entities (append the name to spawn_):  cow, explosive_barrel, ammopack <large|medium|small>, medipack <large|medium|small>, sentry <1|2|3>, dispenser <1|2|3>, merasmus <health>, monoculus <level>, horsemann, tank, zombie");
+	return Plugin_Continue;
 }
 
 /*
 CHANGELOG:
 ----------
+1.0.0 Beta 6 (September 23, 2013 A.D.):  Fixed spawn_help's Plugin_Handled->Plugin_Continue, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
 1.0.0 Beta 5 (September 23, 2013 A.D.):  Fixed Merasmus, ammopacks, and medipacks not spawning, fixed some checks activating at the wrong time, re-organized/optimized code, made many messages more verbose, changed Plugin_Handled after the entity spawned to Plugin_Continue, changed CPrintToChat to CReplyToCommand, and added WIP menu code.
 1.0.0 Beta 4 (September 20, 2013 A.D.):  Fixed cows and hopefully Merasmus/ammopacks/medipacks not spawning, fixed typos, optimized code, created more fallbacks, removed unfinished code, made some messages more verbose, and added more invalid checks.
 */
