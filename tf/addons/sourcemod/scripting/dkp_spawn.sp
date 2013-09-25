@@ -12,7 +12,7 @@
 #include <adminmenu>
 #include <morecolors>
 
-#define PLUGIN_VERSION "1.0.0 Beta 6"
+#define PLUGIN_VERSION "1.0.0 Beta 7"
 #define MAXENTITIES 256
 
 new Handle:Merasmus_Base_HP=INVALID_HANDLE;
@@ -42,6 +42,8 @@ public OnPluginStart()
 {
 	CreateConVar("spawn_version", PLUGIN_VERSION, "Plugin version (DO NOT HARDCODE)", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 
+	RegAdminCmd("spawn", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");
+	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");  //Redundancy just in case.
 	RegAdminCmd("spawn_cow", Command_Spawn_Cow, ADMFLAG_GENERIC, "Spawn a cow!");
 	RegAdminCmd("spawn_explosive_barrel", Command_Spawn_Explosive_Barrel, ADMFLAG_GENERIC, "Spawn an explosive barrel!");
 	RegAdminCmd("spawn_ammopack", Command_Spawn_Ammopack, ADMFLAG_GENERIC, "Spawn an ammopack!  Usage:  spawn_ammopack <large|medium|small>");
@@ -316,12 +318,16 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 }
 
 /*==========BUILDINGS==========*/
-public Action:Command_Spawn_Sentry(client, args/*, level*/)
+public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 {
+	new Float:angles[3];
+	GetClientEyeAngles(client, angles);
 	decl String:model[64];
 	new team=GetClientTeam(client);
+	new skin=team-2;
 	new shells, health, rockets;
 	new level=1;
+	new bool:mini=false;
 
 	if(client<1)
 	{
@@ -335,82 +341,145 @@ public Action:Command_Spawn_Sentry(client, args/*, level*/)
 		return Plugin_Handled;
 	}
 
+	if(GetEntityCount()>=GetMaxEntities()-32)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
+		return Plugin_Handled;
+	}
+
 	decl String:sentrylevel[128];
 	if(args==1)
 	{
 		GetCmdArgString(sentrylevel, sizeof(sentrylevel));
 		level=StringToInt(sentrylevel);
-		if(level<1 || level>4)
+		if(level>3 && level<7)
 		{
-			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  The sentry's level has been set to 1.  Good try, though.");
+			level=StringToInt(sentrylevel)-3;
+			mini=true;
+		}
+		else if(level<1 || level>7)
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  The sentry's level has been set to 1.  Good try though.");
 			level=1;
 		}
 	}
 	else if(args>1)
 	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_sentry <1|2|3>");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_sentry <1|2|3|4|5|6>.  Choosing 4-6 will spawn a mini-sentry with the level you chose-3.");
 		return Plugin_Handled;
 	}
 
-	if(level==1)
+	switch(level)
 	{
-		model="models/buildables/sentry1.mdl";
-		shells=100;
-		health=150;
+		case 1:
+		{
+			model="models/buildables/sentry1.mdl";
+			shells=100;
+			health=150;
+			if(mini)
+			{
+				health=100;
+			}
+		}
+		case 2:
+		{
+			model="models/buildables/sentry2.mdl";
+			shells=120;
+			health=180;
+			if(mini)
+			{
+				health=120;
+			}
+		}
+		case 3:
+		{
+			model="models/buildables/sentry3.mdl";
+			shells=144;
+			health=216;
+			rockets=20;
+			if(mini)
+			{
+				health=180;
+			}
+		}
+		default:
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} The level was invalid!  That shouldn't be happening.");
+			return Plugin_Handled;
+		}
 	}
-	else if(level==2)
+
+	if(mini&&level==1)
 	{
-        model="models/buildables/sentry2.mdl";
-        shells=120;
-        health=180;
-	}
-	else if(level==3)
-	{
-		model="models/buildables/sentry3.mdl";
-		shells=144;
-		health=216;
-		rockets=20;
+		skin=team;
 	}
 
 	new entity=CreateEntityByName("obj_sentrygun");
-	if(IsValidEntity(entity))
-	{
-		DispatchSpawn(entity);
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-		SetEntityModel(entity, model);
-
-		SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
-		SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
-		SetEntProp(entity, Prop_Send, "m_iAmmoShells", shells);
-		SetEntProp(entity, Prop_Send, "m_iAmmoRockets", rockets);
-		SetEntProp(entity, Prop_Send, "m_health", health);
-		SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
-		SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
-		SetEntProp(entity, Prop_Send, "m_iState", 1);
-		SetEntProp(entity, Prop_Send, "m_teamNum", team);
-		SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
-		SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
-		SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
-		SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", 1.0);
-
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
-		LogAction(client, client, "[Spawn] \"%L\" a level %i sentry", client, level);
-	}
-	else
+	if(entity<MaxClients || !IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+	DispatchSpawn(entity);
+	TeleportEntity(entity, position, angles, NULL_VECTOR);
+	SetEntityModel(entity, model);
+
+	SetEntProp(entity, Prop_Send, "m_ammoShells", shells);
+	SetEntProp(entity, Prop_Send, "m_ammoRockets", rockets);
+	SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
+	SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
+	SetEntProp(entity, Prop_Send, "m_health", health);
+	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
+	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
+	SetEntProp(entity, Prop_Send, "m_iState", 3);
+	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_nSkin", skin);
+	SetEntProp(entity, Prop_Send, "m_teamNum", team);
+	SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
+	SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", level==1 ? 0.99:1.0);
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 66.0});
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
+	if(level==1)
+	{
+		SetEntProp(entity, Prop_Send, "m_bBuilding", 1);
+	}
+	if(mini)
+	{
+		SetEntProp(entity, Prop_Send, "m_miniBuilding", 1);
+		SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 0.75);
+	}
+	new offs=FindSendPropInfo("CObjectSentrygun", "m_iDesiredBuildRotations");
+	if(offs<=0)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went wrong with the build rotation!");
+		return Plugin_Handled;
+	}
+	SetEntData(entity, offs-12, 1, 1, true);
+
+	if(mini)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i mini-sentry!", level);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i mini-sentry", client, level);
+	}
+	else
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
+		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
+	}
 	return Plugin_Continue;
 }
 
-public Action:Command_Spawn_Dispenser(client, args/*, level*/)
+public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
 {
-	new String:model[100];
+	decl String:model[128];
+	new Float:angles[3];
+	GetClientEyeAngles(client, angles);
 	new team=GetClientTeam(client);
 	new health;
 	new ammo=400;
 	new level=1;
+
 	if(client<1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
@@ -434,7 +503,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 	{
 		GetCmdArgString(dispenserlevel, sizeof(dispenserlevel));
 		level=StringToInt(dispenserlevel);
-		if(level<1 || level>4)
+		if(level<1 || level>3)
 		{
 			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  The dispenser's level has been set to 1.  Good try though.");
 			level=1;
@@ -446,58 +515,74 @@ public Action:Command_Spawn_Dispenser(client, args/*, level*/)
 		return Plugin_Handled;
 	}
 
-	if(level==1)
+	switch (level)
 	{
-		model="models/buildables/dispenser.mdl";
-		health=150;		
-	}
-	else if(level==2)
-	{
-		model="models/buildables/dispenser_lvl2.mdl";
-		health=180;
-	}
-	else if(level==3)
-	{
-		model="models/buildables/dispenser_lvl3.mdl";
-		health=216;
-	}
-	else
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The level was invalid!  This shouldn't be happening.");
-		return Plugin_Handled;
+		case 1:
+		{
+			model="models/buildables/dispenser.mdl";
+			health=150;
+		}
+		case 2:
+		{
+			model="models/buildables/dispenser_lvl2.mdl";
+			health=180;
+		}
+		case 3:
+		{
+			model="models/buildables/dispenser_lvl3.mdl";
+			health=216;
+		}
+		default:
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} The level was invalid!  That shouldn't be happening.");
+			return Plugin_Handled;
+		}
 	}
 
 	new entity=CreateEntityByName("obj_dispenser");
-	if(IsValidEntity(entity))
-	{
-		DispatchSpawn(entity);
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-		SetEntityModel(entity, model);
-
-		SetVariantInt(team);
-		AcceptEntityInput(entity, "TeamNum");
-		SetVariantInt(team);
-		AcceptEntityInput(entity, "SetTeam");
-		ActivateEntity(entity);
-
-		SetEntProp(entity, Prop_Send, "m_ammoMetal", ammo);
-		SetEntProp(entity, Prop_Send, "m_health", health);
-		SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
-		SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Dispenser);
-		SetEntProp(entity, Prop_Send, "m_teamNum", team);
-		SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
-		SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
-		SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", 1.0);
-		SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);		
-
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
-	}
-	else
+	if(entity<MaxClients || !IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+	DispatchSpawn(entity);
+	TeleportEntity(entity, position, angles, NULL_VECTOR);
+
+	SetVariantInt(team);
+	AcceptEntityInput(entity, "TeamNum");
+	SetVariantInt(team);
+	AcceptEntityInput(entity, "SetTeam");
+
+	ActivateEntity(entity);
+
+	SetEntProp(entity, Prop_Send, "m_ammoMetal", ammo);
+	SetEntProp(entity, Prop_Send, "m_health", health);
+	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
+	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Dispenser);
+	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_iState", 3);
+	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
+	SetEntProp(entity, Prop_Send, "m_teamNum", team);
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 55.0});
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
+	SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", level==1 ? 0.99:1.0);
+	if(level==1)
+	{
+		SetEntProp(entity, Prop_Send, "m_bBuilding", 1);
+	}
+	SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
+	SetEntityModel(entity, model);
+	new offs=FindSendPropInfo("CObjectDispenser", "m_iDesiredBuildRotations");
+	if(offs<=0)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went wrong with the build rotation!");
+		return Plugin_Handled;
+	}
+	SetEntData(entity, offs-12, 1, 1, true);
+
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
 	return Plugin_Continue;
 }
 
@@ -556,7 +641,7 @@ public Action:Command_Spawn_Merasmus(client, args)
 	}
 	else
 	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Merasmus' health was below 1!  That shouldn't be happening.");
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Merasmus' health was below 1!  That shouldn't be happening.");
 		return Plugin_Handled;
 	}
 	DispatchSpawn(entity);
@@ -588,60 +673,58 @@ public Action:Command_Spawn_Monoculus(client, args)
 	}
 
 	new entity = CreateEntityByName("eyeball_boss");
-	if(IsValidEntity(entity))
-	{
-		new level=1;
-		if(args==1)
-		{
-			decl String:buffer[15];
-			GetCmdArg(1, buffer, sizeof(buffer));
-			level=StringToInt(buffer);
-			if(level<=0)
-			{
-				CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  Monoculus's level has been set to 1.  Good try though.");
-				level=1;
-			}
-		}
-		else if(args>1)
-		{
-			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_monoculus <level>");
-			return Plugin_Handled;
-		}
-
-		if(level>1)
-		{
-			new Monoculus_Base_HP=GetConVarInt(Monoculus_HP_Level_2);
-			new Monoculus_HP_Per_Level=GetConVarInt(Monoculus_HP_Level);
-			new Monoculus_HP_Per_Player=GetConVarInt(Monoculus_HP_Player);
-			new NumPlayers=GetClientCount(true);
-
-			new HP=Monoculus_Base_HP;
-			HP=(HP+((level-2)*Monoculus_HP_Per_Level));
-			if(NumPlayers>10)
-			{
-				HP=(HP+((NumPlayers-10)*Monoculus_HP_Per_Player));
-			}
-			SetEntProp(entity, Prop_Data, "m_iMaxHealth", HP);
-			SetEntProp(entity, Prop_Data, "m_health", HP);
-			letsChangeThisEvent=level;
-		}
-		else if(level<=0)
-		{
-			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Monoculus' level was below 1!  That shouldn't be happening.");
-			return Plugin_Handled;
-		}
-		DispatchSpawn(entity);
-		position[2]-=10.0;
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-
-		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
-	}
-	else
+	if(!IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+
+	new level=1;
+	if(args==1)
+	{
+		decl String:buffer[15];
+		GetCmdArg(1, buffer, sizeof(buffer));
+		level=StringToInt(buffer);
+		if(level<=0)
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Haha, no.  Monoculus's level has been set to 1.  Good try though.");
+			level=1;
+		}
+	}
+	else if(args>1)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_monoculus <level>");
+		return Plugin_Handled;
+	}
+
+	if(level>1)
+	{
+		new Monoculus_Base_HP=GetConVarInt(Monoculus_HP_Level_2);
+		new Monoculus_HP_Per_Level=GetConVarInt(Monoculus_HP_Level);
+		new Monoculus_HP_Per_Player=GetConVarInt(Monoculus_HP_Player);
+		new NumPlayers=GetClientCount(true);
+
+		new HP=Monoculus_Base_HP;
+		HP=(HP+((level-2)*Monoculus_HP_Per_Level));
+		if(NumPlayers>10)
+		{
+			HP=(HP+((NumPlayers-10)*Monoculus_HP_Per_Player));
+		}
+		SetEntProp(entity, Prop_Data, "m_iMaxHealth", HP);
+		SetEntProp(entity, Prop_Data, "m_health", HP);
+		letsChangeThisEvent=level;
+	}
+	else if(level<=0)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Monoculus' level was below 1!  That shouldn't be happening.");
+		return Plugin_Handled;
+	}
+	DispatchSpawn(entity);
+	position[2]-=10.0;
+	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
 	return Plugin_Continue;
 }
 
@@ -666,20 +749,17 @@ public Action:Command_Spawn_Horsemann(client, args)
 	}
 
 	new entity=CreateEntityByName("headless_hatman");
-	if(IsValidEntity(entity))
-	{
-		DispatchSpawn(entity);
-		position[2]-=10.0;
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned the HHHH Jr!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned the HHHH Jr", client);
-	}
-	else
+	if(!IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+	DispatchSpawn(entity);
+	position[2]-=10.0;
+	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned the Headless Horseless Horsemann!");
+	LogAction(client, client, "[Spawn] \"%L\" spawned the Headless Horseless Horsemann", client);
 	return Plugin_Continue;
 }
 
@@ -704,20 +784,17 @@ public Action:Command_Spawn_Tank(client, args)
 	}
 
 	new entity=CreateEntityByName("tank_boss");
-	if(IsValidEntity(entity))
-	{
-		DispatchSpawn(entity);
-		position[2] -= 10.0;
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-
-		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a tank!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
-	}
-	else
+	if(!IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+	DispatchSpawn(entity);
+	position[2] -= 10.0;
+	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a tank!");
+	LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
 	return Plugin_Continue;
 }
 
@@ -742,31 +819,33 @@ public Action:Command_Spawn_Zombie(client, args)
 	}
 
 	new entity=CreateEntityByName("tf_zombie");
-	if(IsValidEntity(entity))
-	{
-		DispatchSpawn(entity);
-		position[2]-=10.0;
-		TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
-
-		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a zombie!");
-		LogAction(client, client, "[Spawn] \"%L\" spawned a zombie", client);
-	}
-	else
+	if(!IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
+	DispatchSpawn(entity);
+	position[2]-=10.0;
+	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+
+	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a zombie!");
+	LogAction(client, client, "[Spawn] \"%L\" spawned a zombie", client);
 	return Plugin_Continue;
 }
 
 /*==========MENUS-WIP==========*/
-/*public Action:Create_Menu(client)
+public Action:Command_Menu(client, args)
 {
-	new Handle:menu=CreateMenu(MenuHandler);
+	CreateMenuGeneral(client);
+}
+
+stock CreateMenuGeneral(client)
+{
+	new Handle:menu=CreateMenu(MenuHandlerGeneral);
 	SetMenuTitle(menu, "Spawn Menu");
 	AddMenuItem(menu, "cow", "Cow");
 	AddMenuItem(menu, "explosive_barrel", "Explosive Barrel");
-	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
+/*	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
 	AddMenuItem(menu, "sentry2", "Level 2 Sentry");
 	AddMenuItem(menu, "sentry3", "Level 3 Sentry");
 	AddMenuItem(menu, "dispenser1", "Level 1 Sentry");
@@ -777,18 +856,18 @@ public Action:Command_Spawn_Zombie(client, args)
 	AddMenuItem(menu, "ammo_small", "Small Ammopack");
 	AddMenuItem(menu, "health_large", "Large Medipack");
 	AddMenuItem(menu, "health_medium", "Health Ammopack");
-	AddMenuItem(menu, "health_small", "Small Medipack");
+	AddMenuItem(menu, "health_small", "Small Medipack");*/
 	AddMenuItem(menu, "merasmus", "Merasmus");
 	AddMenuItem(menu, "monoculus", "Monoculus");
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
 	AddMenuItem(menu, "tank", "Tank");
+	AddMenuItem(menu, "zombie", "Zombie");
 	DisplayMenu(menu, client, 30);
 }
-public MenuHandler(Handle:menu, MenuAction:action, client, param2)
+
+public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, param2)
 {
-	new String:name[32];
 	new String:selection[32];
-	GetClientName(client, name, 80);
 	GetMenuItem(menu, param2, selection, sizeof(selection));
 	if (action==MenuAction_Select)
 	{
@@ -800,7 +879,7 @@ public MenuHandler(Handle:menu, MenuAction:action, client, param2)
 		{
 			Command_Spawn_Explosive_Barrel(client, 0);
 		}
-		else if(StrEqual(selection, "sentry1"))
+/*		else if(StrEqual(selection, "sentry1"))
 		{
 			Command_Spawn_Sentry(client, 1, 1);
 		}
@@ -847,7 +926,7 @@ public MenuHandler(Handle:menu, MenuAction:action, client, param2)
 		else if(StrEqual(selection, "health_small"))
 		{
 			Command_Spawn_Ammopack(client, 1, "small");
-		}
+		}*/
 		else if(StrEqual(selection, "merasmus"))
 		{
 			Command_Spawn_Merasmus(client, 0);
@@ -870,11 +949,11 @@ public MenuHandler(Handle:menu, MenuAction:action, client, param2)
 		}
 		else
 		{
-			CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went horribly wrong!");
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Something went horribly wrong with the menu code!");
 		}
-		Create_Menu(client);
+		CreateMenuGeneral(client);
 	}
-}*/
+}
 
 public OnAdminMenuReady(Handle:topmenu)
 {
@@ -1498,13 +1577,15 @@ PrecacheZombie()
 /*==========HELP==========*/
 public Action:Command_Spawn_Help(client, args)
 {
-	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Available entities (append the name to spawn_):  cow, explosive_barrel, ammopack <large|medium|small>, medipack <large|medium|small>, sentry <1|2|3>, dispenser <1|2|3>, merasmus <health>, monoculus <level>, horsemann, tank, zombie");
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Available entities (append the name to spawn_):  cow, explosive_barrel, ammopack <large|medium|small>, medipack <large|medium|small>, sentry <1|2|3|4|5|6> (4-6 are level 1-3 mini-sentries), dispenser <1|2|3>, merasmus <health>, monoculus <level>, horsemann, tank, zombie");
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Still confused?  Type {Skyblue}spawn{Default} or {Skyblue}spawn_menu{Default} to bring up the Spawn menu!");
 	return Plugin_Continue;
 }
 
 /*
 CHANGELOG:
 ----------
+1.0.0 Beta 7 (September 24, 2013 A.D.):  Changed sentry/dispenser code again (added mini-sentries!), added big error messages, added another line to spawn_help, started to implement the menu code, corrected more typos, and optimized/re-organized more code.
 1.0.0 Beta 6 (September 23, 2013 A.D.):  Fixed spawn_help's Plugin_Handled->Plugin_Continue, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
 1.0.0 Beta 5 (September 23, 2013 A.D.):  Fixed Merasmus, ammopacks, and medipacks not spawning, fixed some checks activating at the wrong time, re-organized/optimized code, made many messages more verbose, changed Plugin_Handled after the entity spawned to Plugin_Continue, changed CPrintToChat to CReplyToCommand, and added WIP menu code.
 1.0.0 Beta 4 (September 20, 2013 A.D.):  Fixed cows and hopefully Merasmus/ammopacks/medipacks not spawning, fixed typos, optimized code, created more fallbacks, removed unfinished code, made some messages more verbose, and added more invalid checks.
