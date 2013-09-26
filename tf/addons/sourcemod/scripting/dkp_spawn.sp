@@ -1,4 +1,4 @@
-//TODO:  SLAYING/REMOVING, MENUS
+//TODO:  SLAYING/REMOVING
 //Thanks to abrandnewday, DarthNinja, HL-SDK, and X3Mano for your plugins that were so helpful to me in writing my plugin!
 //Changelog is at the very bottom.
 
@@ -9,10 +9,12 @@
 #include <tf2_stocks>
 #include <sdktools>
 #include <sdkhooks>
-#include <adminmenu>
 #include <morecolors>
 
-#define PLUGIN_VERSION "1.0.0 Beta 7"
+#undef REQUIRE_PLUGIN
+#include <adminmenu>
+
+#define PLUGIN_VERSION "1.0.0 Beta 8"
 #define MAXENTITIES 256
 
 new Handle:Merasmus_Base_HP=INVALID_HANDLE;
@@ -21,7 +23,7 @@ new Handle:Monoculus_HP_Level_2=INVALID_HANDLE;
 new Handle:Monoculus_HP_Player=INVALID_HANDLE;
 new Handle:Monoculus_HP_Level=INVALID_HANDLE;
 
-new Handle:AdminMenu=INVALID_HANDLE;
+new Handle:adminMenu = INVALID_HANDLE;
 
 new Float:position[3];
 new trackEntity=-1;
@@ -43,13 +45,13 @@ public OnPluginStart()
 	CreateConVar("spawn_version", PLUGIN_VERSION, "Plugin version (DO NOT HARDCODE)", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 
 	RegAdminCmd("spawn", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");
-	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");  //Redundancy just in case.
+	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");
 	RegAdminCmd("spawn_cow", Command_Spawn_Cow, ADMFLAG_GENERIC, "Spawn a cow!");
 	RegAdminCmd("spawn_explosive_barrel", Command_Spawn_Explosive_Barrel, ADMFLAG_GENERIC, "Spawn an explosive barrel!");
-	RegAdminCmd("spawn_ammopack", Command_Spawn_Ammopack, ADMFLAG_GENERIC, "Spawn an ammopack!  Usage:  spawn_ammopack <large|medium|small>");
-	RegAdminCmd("spawn_medipack", Command_Spawn_Medipack, ADMFLAG_GENERIC, "Spawn a medipack!  Usage:  spawn_medipack <large|medium|small>");
-	RegAdminCmd("spawn_sentry", Command_Spawn_Sentry, ADMFLAG_GENERIC, "Spawn a sentry!  Usage:  spawn_sentry <1|2|3>");
-	RegAdminCmd("spawn_dispenser", Command_Spawn_Dispenser, ADMFLAG_GENERIC, "Spawn a dispenser!  Usage:  spawn_dispenser <1|2|3>");
+	RegAdminCmd("spawn_ammopack", Forward_Command_Ammopack, ADMFLAG_GENERIC, "Spawn an ammopack!  Usage:  spawn_ammopack <large|medium|small>");
+	RegAdminCmd("spawn_medipack", Forward_Command_Medipack, ADMFLAG_GENERIC, "Spawn a medipack!  Usage:  spawn_medipack <large|medium|small>");
+	RegAdminCmd("spawn_sentry", Forward_Command_Sentry, ADMFLAG_GENERIC, "Spawn a sentry!  Usage:  spawn_sentry <1|2|3|4|5|6> (4-6 are mini-sentries)");
+	RegAdminCmd("spawn_dispenser", Forward_Command_Dispenser, ADMFLAG_GENERIC, "Spawn a dispenser!  Usage:  spawn_dispenser <1|2|3>");
 	RegAdminCmd("spawn_merasmus", Command_Spawn_Merasmus, ADMFLAG_GENERIC, "Spawn Merasmus!  Usage:  spawn_merasmus <health>");
 	RegAdminCmd("spawn_monoculus", Command_Spawn_Monoculus, ADMFLAG_GENERIC, "Spawn Monoculus!  Usage:  spawn_monoculus <level>");
 	RegAdminCmd("spawn_horsemann", Command_Spawn_Horsemann, ADMFLAG_GENERIC, "Spawn the HHHH Jr!");
@@ -87,9 +89,9 @@ public OnMapStart()
 
 public OnLibraryRemoved(const String:name[])
 {
-	if(StrEqual(name, "adminmenu"))
+	if (StrEqual(name, "adminmenu"))
 	{
-		AdminMenu=INVALID_HANDLE;
+		adminMenu = INVALID_HANDLE;
 	}
 }
 
@@ -172,24 +174,11 @@ public Action:Command_Spawn_Explosive_Barrel(client, args)
 	return Plugin_Continue;
 }
 
-public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
+public Action:Forward_Command_Ammopack(client, args)
 {
 	if(client<1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
-		return Plugin_Handled;
-	}
-
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
-	}
-
-	new entity=CreateEntityByName("item_ammopack_full");
-	if(!IsValidEntity(entity))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
@@ -198,12 +187,28 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	{
 		GetCmdArg(1, ammosize, sizeof(ammosize));
 	}
-	else if (args>1)
+	else if(args>1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_ammopack <large|medium|small>");
 		return Plugin_Handled;
 	}
+	else
+	{
+		ammosize="large";
+	}
+	Command_Spawn_Ammopack(client, args, ammosize);
+	return Plugin_Continue;
+}
 
+stock Command_Spawn_Ammopack(client, args, String:ammosize[128])
+{
+	if(!SetTeleportEndPoint(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
+		return;
+	}
+
+	new entity=CreateEntityByName("item_ammopack_full");
 	if(StrEqual(ammosize, "large", false))
 	{
 		entity=CreateEntityByName("item_ammopack_full");
@@ -219,19 +224,20 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 	else if(args==1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the ammopack size has been set to large.");
+		ammosize="large";
 		entity=CreateEntityByName("item_ammopack_full");
-	}
-
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
-		return Plugin_Handled;
+		return;
+	}
+	
+	if(!IsValidEntity(entity))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
+		return;
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
 	DispatchSpawn(entity);
@@ -241,27 +247,13 @@ public Action:Command_Spawn_Ammopack(client, args/*, String:ammosize*/)
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s ammopack!", ammosize);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, ammosize);
-	return Plugin_Continue;
 }
 
-public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
+public Action:Forward_Command_Medipack(client, args)
 {
 	if(client<1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
-		return Plugin_Handled;
-	}
-
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
-	}
-
-	new entity=CreateEntityByName("item_healthkit_full");
-	if(!IsValidEntity(entity))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
 		return Plugin_Handled;
 	}
 
@@ -270,12 +262,28 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	{
 		GetCmdArg(1, healthsize, sizeof(healthsize));
 	}
-	else
+	else if(args>1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_medipack <large|medium|small>");
 		return Plugin_Handled;
 	}
+	else
+	{
+		healthsize="large";
+	}
+	Command_Spawn_Medipack(client, args, healthsize);
+	return Plugin_Continue;
+}
 
+stock Command_Spawn_Medipack(client, args, String:healthsize[128])
+{
+	if(!SetTeleportEndPoint(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
+		return;
+	}
+
+	new entity=CreateEntityByName("item_healthkit_full");
 	if(StrEqual(healthsize, "large", false))
 	{
 		entity=CreateEntityByName("item_healthkit_full");
@@ -291,19 +299,20 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 	else if(args==1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the medipack size has been set to large.");
+		healthsize="large";
 		entity=CreateEntityByName("item_healthkit_full");
-	}
-
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
 	}
 
 	if(GetEntityCount()>=GetMaxEntities()-32)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
-		return Plugin_Handled;
+		return;
+	}
+
+	if(!IsValidEntity(entity))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
+		return;
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
 	DispatchSpawn(entity);
@@ -314,40 +323,20 @@ public Action:Command_Spawn_Medipack(client, args/*, String:healthsize*/)
 
 	CReplyToCommand(client,"{Vintage}[Spawn]{Default} You spawned a %s medipack!", healthsize);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a %s medipack", client, healthsize);
-	return Plugin_Continue;
 }
 
 /*==========BUILDINGS==========*/
-public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
+public Action:Forward_Command_Sentry(client, args)
 {
-	new Float:angles[3];
-	GetClientEyeAngles(client, angles);
-	decl String:model[64];
-	new team=GetClientTeam(client);
-	new skin=team-2;
-	new shells, health, rockets;
 	new level=1;
 	new bool:mini=false;
-
+	decl String:sentrylevel[128];
 	if(client<1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
-	}
-
-	if(GetEntityCount()>=GetMaxEntities()-32)
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
-		return Plugin_Handled;
-	}
-
-	decl String:sentrylevel[128];
 	if(args==1)
 	{
 		GetCmdArgString(sentrylevel, sizeof(sentrylevel));
@@ -367,6 +356,30 @@ public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_sentry <1|2|3|4|5|6>.  Choosing 4-6 will spawn a mini-sentry with the level you chose-3.");
 		return Plugin_Handled;
+	}
+	Command_Spawn_Sentry(client, args, level, mini);
+	return Plugin_Continue;
+}
+
+stock Command_Spawn_Sentry(client, args, level, bool:mini)
+{
+	new Float:angles[3];
+	GetClientEyeAngles(client, angles);
+	decl String:model[64];
+	new team=GetClientTeam(client);
+	new skin=team-2;
+	new shells, health, rockets;
+
+	if(!SetTeleportEndPoint(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
+		return;
+	}
+
+	if(GetEntityCount()>=GetMaxEntities()-32)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
+		return;
 	}
 
 	switch(level)
@@ -405,7 +418,7 @@ public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 		default:
 		{
 			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} The level was invalid!  That shouldn't be happening.");
-			return Plugin_Handled;
+			return;
 		}
 	}
 
@@ -418,7 +431,7 @@ public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 	if(entity<MaxClients || !IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
-		return Plugin_Handled;
+		return;
 	}
 	DispatchSpawn(entity);
 	TeleportEntity(entity, position, angles, NULL_VECTOR);
@@ -453,7 +466,7 @@ public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 	if(offs<=0)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went wrong with the build rotation!");
-		return Plugin_Handled;
+		return;
 	}
 	SetEntData(entity, offs-12, 1, 1, true);
 
@@ -467,38 +480,18 @@ public Action:Command_Spawn_Sentry(client, args/*, level, bool:mini=false*/)
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
 		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
 	}
-	return Plugin_Continue;
 }
 
-public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
+public Action:Forward_Command_Dispenser(client, args)
 {
-	decl String:model[128];
-	new Float:angles[3];
-	GetClientEyeAngles(client, angles);
-	new team=GetClientTeam(client);
-	new health;
-	new ammo=400;
 	new level=1;
-
+	decl String:dispenserlevel[128];
 	if(client<1)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
 		return Plugin_Handled;
 	}
 
-	if(!SetTeleportEndPoint(client))
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
-		return Plugin_Handled;
-	}
-
-	if(GetEntityCount()>=GetMaxEntities()-32)
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
-		return Plugin_Handled;
-	}
-
-	decl String:dispenserlevel[128];
 	if(args==1)
 	{
 		GetCmdArgString(dispenserlevel, sizeof(dispenserlevel));
@@ -513,6 +506,30 @@ public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Format: spawn_dispenser <1|2|3>");
 		return Plugin_Handled;
+	}
+	Command_Spawn_Dispenser(client, args, level);
+	return Plugin_Continue;
+}
+
+stock Command_Spawn_Dispenser(client, args, level)
+{
+	decl String:model[128];
+	new Float:angles[3];
+	GetClientEyeAngles(client, angles);
+	new team=GetClientTeam(client);
+	new health;
+	new ammo=400;
+
+	if(!SetTeleportEndPoint(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Could not find the spawn point.");
+		return;
+	}
+
+	if(GetEntityCount()>=GetMaxEntities()-32)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Too many entities have been spawned, reload the map.");
+		return;
 	}
 
 	switch (level)
@@ -535,7 +552,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
 		default:
 		{
 			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} The level was invalid!  That shouldn't be happening.");
-			return Plugin_Handled;
+			return;
 		}
 	}
 
@@ -543,7 +560,7 @@ public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
 	if(entity<MaxClients || !IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
-		return Plugin_Handled;
+		return;
 	}
 	DispatchSpawn(entity);
 	TeleportEntity(entity, position, angles, NULL_VECTOR);
@@ -577,13 +594,12 @@ public Action:Command_Spawn_Dispenser(client, args/*, level, bool:mini=false*/)
 	if(offs<=0)
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Something went wrong with the build rotation!");
-		return Plugin_Handled;
+		return;
 	}
 	SetEntData(entity, offs-12, 1, 1, true);
 
 	CReplyToCommand(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
-	return Plugin_Continue;
 }
 
 /*==========BOSSES==========*/
@@ -591,7 +607,7 @@ public Action:Command_Spawn_Merasmus(client, args)
 {
 	new merasmus_health=GetConVarInt(Merasmus_Base_HP);
 	new merasmus_health_per_player=GetConVarInt(Merasmus_HP_Per_Player);
-	new String:health[15], HP=-1;  //Temporary workaround to Merasmus not working?
+	new String:health[15], HP=-1;
 	HP=merasmus_health+(merasmus_health_per_player*peopleConnected);
 	if(client<1)
 	{
@@ -833,10 +849,16 @@ public Action:Command_Spawn_Zombie(client, args)
 	return Plugin_Continue;
 }
 
-/*==========MENUS-WIP==========*/
+/*==========MENUS==========*/
 public Action:Command_Menu(client, args)
 {
+	if(client<1)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
 	CreateMenuGeneral(client);
+	return Plugin_Continue;
 }
 
 stock CreateMenuGeneral(client)
@@ -845,18 +867,21 @@ stock CreateMenuGeneral(client)
 	SetMenuTitle(menu, "Spawn Menu");
 	AddMenuItem(menu, "cow", "Cow");
 	AddMenuItem(menu, "explosive_barrel", "Explosive Barrel");
-/*	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
+	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
+	AddMenuItem(menu, "sentry1m", "Level 1 Mini-Sentry");
 	AddMenuItem(menu, "sentry2", "Level 2 Sentry");
+	AddMenuItem(menu, "sentry2m", "Level 2 Mini-Sentry");
 	AddMenuItem(menu, "sentry3", "Level 3 Sentry");
-	AddMenuItem(menu, "dispenser1", "Level 1 Sentry");
-	AddMenuItem(menu, "dispenser2", "Level 2 Sentry");
-	AddMenuItem(menu, "dispenser3", "Level 3 Sentry");
+	AddMenuItem(menu, "sentry3m", "Level 3 Mini-Sentry");
+	AddMenuItem(menu, "dispenser1", "Level 1 Dispenser");
+	AddMenuItem(menu, "dispenser2", "Level 2 Dispenser");
+	AddMenuItem(menu, "dispenser3", "Level 3 Dispenser");
 	AddMenuItem(menu, "ammo_large", "Large Ammopack");
 	AddMenuItem(menu, "ammo_medium", "Medium Ammopack");
 	AddMenuItem(menu, "ammo_small", "Small Ammopack");
 	AddMenuItem(menu, "health_large", "Large Medipack");
 	AddMenuItem(menu, "health_medium", "Health Ammopack");
-	AddMenuItem(menu, "health_small", "Small Medipack");*/
+	AddMenuItem(menu, "health_small", "Small Medipack");
 	AddMenuItem(menu, "merasmus", "Merasmus");
 	AddMenuItem(menu, "monoculus", "Monoculus");
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
@@ -865,10 +890,10 @@ stock CreateMenuGeneral(client)
 	DisplayMenu(menu, client, 30);
 }
 
-public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, param2)
+public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menupos)
 {
 	new String:selection[32];
-	GetMenuItem(menu, param2, selection, sizeof(selection));
+	GetMenuItem(menu, menupos, selection, sizeof(selection));
 	if (action==MenuAction_Select)
 	{
 		if(StrEqual(selection, "cow"))
@@ -879,54 +904,66 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, param2)
 		{
 			Command_Spawn_Explosive_Barrel(client, 0);
 		}
-/*		else if(StrEqual(selection, "sentry1"))
+		else if(StrEqual(selection, "sentry1"))
 		{
-			Command_Spawn_Sentry(client, 1, 1);
+			Menu_Command_Forward(client, selection);
+		}
+		else if(StrEqual(selection, "sentry1m"))
+		{
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "sentry2"))
 		{
-			Command_Spawn_Sentry(client, 1, 2);
+			Menu_Command_Forward(client, selection);
+		}
+		else if(StrEqual(selection, "sentry2m"))
+		{
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "sentry3"))
 		{
-			Command_Spawn_Sentry(client, 1, 3);
+			Menu_Command_Forward(client, selection);
+		}
+		else if(StrEqual(selection, "sentry3m"))
+		{
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "dispenser1"))
 		{
-			Command_Spawn_Dispenser(client, 1, 1);
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "dispenser2"))
 		{
-			Command_Spawn_Dispenser(client, 1, 2);
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "dispenser3"))
 		{
-			Command_Spawn_Dispenser(client, 1, 3);
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "ammo_large"))
 		{
-			Command_Spawn_Ammopack(client, 1, "large");
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "ammo_medium"))
 		{
-			Command_Spawn_Ammopack(client, 1, "medium");
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "ammo_small"))
 		{
-			Command_Spawn_Ammopack(client, 1, "small");
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "health_large"))
 		{
-			Command_Spawn_Ammopack(client, 1, "large");
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "health_medium"))
 		{
-			Command_Spawn_Ammopack(client, 1, "medium");
+			Menu_Command_Forward(client, selection);
 		}
 		else if(StrEqual(selection, "health_small"))
 		{
-			Command_Spawn_Ammopack(client, 1, "small");
-		}*/
+			Menu_Command_Forward(client, selection);
+		}
 		else if(StrEqual(selection, "merasmus"))
 		{
 			Command_Spawn_Merasmus(client, 0);
@@ -955,13 +992,120 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, param2)
 	}
 }
 
+public Menu_Command_Forward(client, String:selection[32])
+{
+	if(StrEqual(selection, "sentry1"))
+	{
+		Command_Spawn_Sentry(client, 0, 1, false);
+	}
+	else if(StrEqual(selection, "sentry1m"))
+	{
+		Command_Spawn_Sentry(client, 0, 1, true);
+	}
+	else if(StrEqual(selection, "sentry2"))
+	{
+		Command_Spawn_Sentry(client, 0, 2, false);
+	}
+	else if(StrEqual(selection, "sentry2m"))
+	{
+		Command_Spawn_Sentry(client, 0, 2, true);
+	}
+	else if(StrEqual(selection, "sentry3"))
+	{
+		Command_Spawn_Sentry(client, 0, 3, false);
+	}
+	else if(StrEqual(selection, "sentry3m"))
+	{
+		Command_Spawn_Sentry(client, 0, 3, true);
+	}
+	else if(StrEqual(selection, "dispenser1"))
+	{
+		Command_Spawn_Dispenser(client, 0, 1);
+	}
+	else if(StrEqual(selection, "dispenser2"))
+	{
+		Command_Spawn_Dispenser(client, 0, 2);
+	}
+	else if(StrEqual(selection, "dispenser3"))
+	{
+		Command_Spawn_Dispenser(client, 0, 3);
+	}
+	else if(StrEqual(selection, "ammo_large"))
+	{
+		Command_Spawn_Ammopack(client, 0, "large");
+	}
+	else if(StrEqual(selection, "ammo_medium"))
+	{
+		Command_Spawn_Ammopack(client, 0, "medium");
+	}
+	else if(StrEqual(selection, "ammo_small"))
+	{
+		Command_Spawn_Ammopack(client, 0, "small");
+	}
+	else if(StrEqual(selection, "health_large"))
+	{
+		Command_Spawn_Medipack(client, 0, "large");
+	}
+	else if(StrEqual(selection, "health_medium"))
+	{
+		Command_Spawn_Medipack(client, 0, "medium");
+	}
+	else if(StrEqual(selection, "health_small"))
+	{
+		Command_Spawn_Medipack(client, 0, "small");
+	}
+	else
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Something went wrong with the menu command forwarding code!  This shouldn't be happening.");
+	}
+}
+
 public OnAdminMenuReady(Handle:topmenu)
 {
-	if (topmenu==AdminMenu)
+	if(topmenu==adminMenu)
 	{
 		return;
 	}
 }
+
+/*AttachAdminMenu()
+{
+	AddToTopMenu(adminMenu, "Spawn Commands", TopMenuObject_Category, CategoryHandler, INVALID_TOPMENUOBJECT);
+}
+ 
+public CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuObject:objectID, param, String:buffer[], maxlength)
+{
+	if (action==TopMenuAction_DisplayTitle)
+	{
+		Format(buffer, maxlength, "Spawn Commands:");
+	}
+	else if(action==TopMenuAction_DisplayOption)
+	{
+		Format(buffer, maxlength, "Spawn Commands");
+	}
+}
+
+AttachAdminMenu()
+{
+	new TopMenuObject:spawnCommands=FindTopMenuCategory(adminMenu, "Spawn Commands");
+	if(spawnCommands==INVALID_TOPMENUOBJECT)
+	{
+		return;
+	}
+	AddToTopMenu(adminMenu, "spawn_cow", TopMenuObject_Item, AdminMenu_Poke, spawnCommands, "spawn_cow", ADMFLAG_GENERIC);
+}
+ 
+public AdminMenu_Cow(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
+{
+	if(action==TopMenuAction_DisplayOption)
+	{
+		Format(buffer, maxlength, "Cow");
+	}
+	else if(action==TopMenuAction_SelectOption)
+	{
+		//TODO
+	}
+}*/
 
 /*==========TECHNICAL STUFF==========*/
 SetTeleportEndPoint(client)
@@ -1585,6 +1729,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 Beta 8 (September 25, 2013 A.D.):  Finished implementing standalone menu code and worked a bit on the admin menu.  Might not work as intended.
 1.0.0 Beta 7 (September 24, 2013 A.D.):  Changed sentry/dispenser code again (added mini-sentries!), added big error messages, added another line to spawn_help, started to implement the menu code, corrected more typos, and optimized/re-organized more code.
 1.0.0 Beta 6 (September 23, 2013 A.D.):  Fixed spawn_help's Plugin_Handled->Plugin_Continue, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
 1.0.0 Beta 5 (September 23, 2013 A.D.):  Fixed Merasmus, ammopacks, and medipacks not spawning, fixed some checks activating at the wrong time, re-organized/optimized code, made many messages more verbose, changed Plugin_Handled after the entity spawned to Plugin_Continue, changed CPrintToChat to CReplyToCommand, and added WIP menu code.
