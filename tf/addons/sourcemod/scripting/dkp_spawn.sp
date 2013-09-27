@@ -1,4 +1,4 @@
-//TODO:  SLAYING/REMOVING
+//TODO:  SLAYING
 //Thanks to abrandnewday, DarthNinja, HL-SDK, and X3Mano for your plugins that were so helpful to me in writing my plugin!
 //Changelog is at the very bottom.
 
@@ -14,16 +14,16 @@
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
-#define PLUGIN_VERSION "1.0.0 Beta 8"
+#define PLUGIN_VERSION "1.0.0 Beta 9"
 #define MAXENTITIES 256
 
-new Handle:Merasmus_Base_HP=INVALID_HANDLE;
-new Handle:Merasmus_HP_Per_Player=INVALID_HANDLE;
-new Handle:Monoculus_HP_Level_2=INVALID_HANDLE;
-new Handle:Monoculus_HP_Player=INVALID_HANDLE;
-new Handle:Monoculus_HP_Level=INVALID_HANDLE;
+new Handle:MerasmusBaseHP=INVALID_HANDLE;
+new Handle:MerasmusHPPerPlayer=INVALID_HANDLE;
+new Handle:MonoculusHPLevel2=INVALID_HANDLE;
+new Handle:MonoculusHPPerPlayer=INVALID_HANDLE;
+new Handle:MonoculusHPPerLevel=INVALID_HANDLE;
 
-new Handle:adminMenu = INVALID_HANDLE;
+new Handle:adminMenu=INVALID_HANDLE;
 
 new Float:position[3];
 new trackEntity=-1;
@@ -48,22 +48,28 @@ public OnPluginStart()
 	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the spawn menu!");
 	RegAdminCmd("spawn_cow", Command_Spawn_Cow, ADMFLAG_GENERIC, "Spawn a cow!");
 	RegAdminCmd("spawn_explosive_barrel", Command_Spawn_Explosive_Barrel, ADMFLAG_GENERIC, "Spawn an explosive barrel!");
-	RegAdminCmd("spawn_ammopack", Forward_Command_Ammopack, ADMFLAG_GENERIC, "Spawn an ammopack!  Usage:  spawn_ammopack <large|medium|small>");
-	RegAdminCmd("spawn_medipack", Forward_Command_Medipack, ADMFLAG_GENERIC, "Spawn a medipack!  Usage:  spawn_medipack <large|medium|small>");
-	RegAdminCmd("spawn_sentry", Forward_Command_Sentry, ADMFLAG_GENERIC, "Spawn a sentry!  Usage:  spawn_sentry <1|2|3|4|5|6> (4-6 are mini-sentries)");
-	RegAdminCmd("spawn_dispenser", Forward_Command_Dispenser, ADMFLAG_GENERIC, "Spawn a dispenser!  Usage:  spawn_dispenser <1|2|3>");
-	RegAdminCmd("spawn_merasmus", Command_Spawn_Merasmus, ADMFLAG_GENERIC, "Spawn Merasmus!  Usage:  spawn_merasmus <health>");
-	RegAdminCmd("spawn_monoculus", Command_Spawn_Monoculus, ADMFLAG_GENERIC, "Spawn Monoculus!  Usage:  spawn_monoculus <level>");
-	RegAdminCmd("spawn_horsemann", Command_Spawn_Horsemann, ADMFLAG_GENERIC, "Spawn the HHHH Jr!");
+	RegAdminCmd("spawn_ammopack", Forward_Command_Ammopack, ADMFLAG_GENERIC, "Spawn an ammopack!  Usage: spawn_ammopack <large|medium|small>");
+	RegAdminCmd("spawn_medipack", Forward_Command_Medipack, ADMFLAG_GENERIC, "Spawn a medipack!  Usage: spawn_medipack <large|medium|small>");
+	RegAdminCmd("spawn_sentry", Forward_Command_Sentry, ADMFLAG_GENERIC, "Spawn a sentry!  Usage: spawn_sentry <1|2|3|4|5|6> (4-6 are mini-sentries)");
+	RegAdminCmd("spawn_dispenser", Forward_Command_Dispenser, ADMFLAG_GENERIC, "Spawn a dispenser!  Usage: spawn_dispenser <1|2|3>");
+	RegAdminCmd("spawn_merasmus", Command_Spawn_Merasmus, ADMFLAG_GENERIC, "Spawn Merasmus!  Usage: spawn_merasmus <health>");
+	RegAdminCmd("spawn_monoculus", Command_Spawn_Monoculus, ADMFLAG_GENERIC, "Spawn Monoculus!  Usage: spawn_monoculus <level>");
+	RegAdminCmd("spawn_horsemann", Command_Spawn_Horsemann, ADMFLAG_GENERIC, "Spawn the Headless Horseless Horsemann!");
 	RegAdminCmd("spawn_tank", Command_Spawn_Tank, ADMFLAG_GENERIC, "Spawn a tank!");
 	RegAdminCmd("spawn_zombie", Command_Spawn_Zombie, ADMFLAG_GENERIC, "Spawn a zombie!");
+	RegAdminCmd("spawn_destroy", Forward_Command_Destroy, ADMFLAG_GENERIC, "Destroy some stuff!  NOTE: CURRENTLY ONLY WORKS WITH SENTRIES AND DISPENSERS.  Usage: spawn_destroy <sentries|dispensers|all|aim>");
+	RegAdminCmd("spawn_slay_merasmus", Command_Slay_Merasmus, ADMFLAG_GENERIC, "Slay Merasmus!");
+	RegAdminCmd("spawn_slay_monoculus", Command_Slay_Monoculus, ADMFLAG_GENERIC, "Slay Monoculus!");
+	RegAdminCmd("spawn_slay_horsemann", Command_Slay_Horsemann, ADMFLAG_GENERIC, "Slay the Headless Horseless Horsemann!");
+	RegAdminCmd("spawn_slay_tank", Command_Slay_Tank, ADMFLAG_GENERIC, "Slay the tank!");
+	RegAdminCmd("spawn_slay_zombie", Command_Slay_Zombie, ADMFLAG_GENERIC, "Slay a zombie!");
 	RegAdminCmd("spawn_help", Command_Spawn_Help, ADMFLAG_GENERIC, "Lists all entities that this plugin currently supports");
 
-	Merasmus_Base_HP=FindConVar("tf_merasmus_health_base");
-	Merasmus_HP_Per_Player=FindConVar("tf_merasmus_health_per_player");
-	Monoculus_HP_Level_2=FindConVar("tf_eyeball_boss_health_at_level_2");
-	Monoculus_HP_Player=FindConVar("tf_eyeball_boss_health_per_player");
-	Monoculus_HP_Level=FindConVar("tf_eyeball_boss_health_per_level");
+	MerasmusBaseHP=FindConVar("tf_merasmus_health_base");
+	MerasmusHPPerPlayer=FindConVar("tf_merasmus_health_per_player");
+	MonoculusHPPerPlayer=FindConVar("tf_eyeball_boss_health_per_player");
+	MonoculusHPPerLevel=FindConVar("tf_eyeball_boss_health_per_level");
+	MonoculusHPLevel2=FindConVar("tf_eyeball_boss_health_at_level_2");
 
 	HookEvent("merasmus_summoned", Event_Merasmus_Summoned, EventHookMode_Pre);
 	HookEvent("eyeball_boss_summoned", Event_Monoculus_Summoned, EventHookMode_Pre);
@@ -89,9 +95,9 @@ public OnMapStart()
 
 public OnLibraryRemoved(const String:name[])
 {
-	if (StrEqual(name, "adminmenu"))
+	if(StrEqual(name, "adminmenu"))
 	{
-		adminMenu = INVALID_HANDLE;
+		adminMenu=INVALID_HANDLE;
 	}
 }
 
@@ -241,7 +247,6 @@ stock Command_Spawn_Ammopack(client, args, String:ammosize[128])
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
 	DispatchSpawn(entity);
-	SetEntProp(entity, Prop_Send, "m_teamNum", 0, 4);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
@@ -316,7 +321,6 @@ stock Command_Spawn_Medipack(client, args, String:healthsize[128])
 	}
 	DispatchKeyValue(entity, "OnPlayerTouch", "!self,Kill,,0,-1");
 	DispatchSpawn(entity);
-	SetEntProp(entity, Prop_Send, "m_teamNum", 0, 4);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
@@ -605,8 +609,8 @@ stock Command_Spawn_Dispenser(client, args, level)
 /*==========BOSSES==========*/
 public Action:Command_Spawn_Merasmus(client, args)
 {
-	new merasmus_health=GetConVarInt(Merasmus_Base_HP);
-	new merasmus_health_per_player=GetConVarInt(Merasmus_HP_Per_Player);
+	new merasmus_health=GetConVarInt(MerasmusBaseHP);
+	new merasmus_health_per_player=GetConVarInt(MerasmusHPPerPlayer);
 	new String:health[15], HP=-1;
 	HP=merasmus_health+(merasmus_health_per_player*peopleConnected);
 	if(client<1)
@@ -650,9 +654,10 @@ public Action:Command_Spawn_Merasmus(client, args)
 		return Plugin_Handled;
 	}
 
+//	CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Yellow}DEBUG:{Default} %i", HP);
 	if(HP>0)
 	{
-		SetEntProp(entity, Prop_Data, "m_health", HP*4);
+		SetEntProp(entity, Prop_Data, "m_ihealth", HP*4);
 		SetEntProp(entity, Prop_Data, "m_iMaxHealth", HP*4);
 	}
 	else
@@ -688,7 +693,7 @@ public Action:Command_Spawn_Monoculus(client, args)
 		return Plugin_Handled;
 	}
 
-	new entity = CreateEntityByName("eyeball_boss");
+	new entity=CreateEntityByName("eyeball_boss");
 	if(!IsValidEntity(entity))
 	{
 		CReplyToCommand(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
@@ -715,16 +720,16 @@ public Action:Command_Spawn_Monoculus(client, args)
 
 	if(level>1)
 	{
-		new Monoculus_Base_HP=GetConVarInt(Monoculus_HP_Level_2);
-		new Monoculus_HP_Per_Level=GetConVarInt(Monoculus_HP_Level);
-		new Monoculus_HP_Per_Player=GetConVarInt(Monoculus_HP_Player);
+		new monoculus_base_hp=GetConVarInt(MonoculusHPLevel2);
+		new monoculus_hp_per_level=GetConVarInt(MonoculusHPPerLevel);
+		new monoculus_hp_per_player=GetConVarInt(MonoculusHPPerPlayer);
 		new NumPlayers=GetClientCount(true);
 
-		new HP=Monoculus_Base_HP;
-		HP=(HP+((level-2)*Monoculus_HP_Per_Level));
+		new HP=monoculus_base_hp;
+		HP=(HP+((level-2)*monoculus_hp_per_level));
 		if(NumPlayers>10)
 		{
-			HP=(HP+((NumPlayers-10)*Monoculus_HP_Per_Player));
+			HP=(HP+((NumPlayers-10)*monoculus_hp_per_player));
 		}
 		SetEntProp(entity, Prop_Data, "m_iMaxHealth", HP);
 		SetEntProp(entity, Prop_Data, "m_health", HP);
@@ -849,6 +854,183 @@ public Action:Command_Spawn_Zombie(client, args)
 	return Plugin_Continue;
 }
 
+/*==========REMOVING ENTITIES==========*/
+public Action:Forward_Command_Destroy(client, args)
+{
+	new String:selection[10]="aim";
+	if(client<1)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	if(args==1)
+	{
+		GetCmdArg(1, selection, sizeof(selection));
+	}
+	else if(args>1)
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Usage: spawn_destroy <dispensers|sentries|all|aim>");
+		return Plugin_Handled;
+	}
+	Command_Destroy(client, args, selection);
+	return Plugin_Continue;
+}
+
+stock Command_Destroy(client, args, String:selection[10])
+{
+	new entity=-1;
+	if(StrEqual(selection, "dispensers", false))
+	{
+		while((entity=FindEntityByClassname(entity, "obj_dispenser"))!=-1)
+		{
+			if(GetEntPropEnt(entity, Prop_Send, "m_hBuilder")==client)
+			{
+				SetVariantInt(9999);
+				AcceptEntityInput(entity, "RemoveHealth");
+			}
+		}
+	}
+	else if(StrEqual(selection, "sentries", false))
+	{
+		while((entity=FindEntityByClassname(entity,"obj_sentrygun"))!=-1)
+		{
+			if(GetEntPropEnt(entity,Prop_Send,"m_hBuilder")==client)
+			{
+				SetVariantInt(9999);
+				AcceptEntityInput(entity, "RemoveHealth");
+			}
+		}
+	}
+	else if(StrEqual(selection, "all", false))
+	{
+		while((entity=FindEntityByClassname(entity, "obj_dispenser"))!=-1 || (entity=FindEntityByClassname(entity, "obj_sentrygun"))!=-1)
+		{
+			if(GetEntPropEnt(entity, Prop_Send,"m_hBuilder")==client)
+			{
+				SetVariantInt(9999);
+				AcceptEntityInput(entity, "RemoveHealth");
+			}
+		}
+	}
+	else if(StrEqual(selection, "aim", false))
+	{
+		new aim=GetClientAimTarget(client, false);
+		if(!IsValidEntity(aim))
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} No building found at aim.");
+			return;
+		}
+
+		if(GetEntPropEnt(aim, Prop_Send, "m_hBuilder")==client)
+		{
+			SetVariantInt(9999);
+			AcceptEntityInput(aim, "RemoveHealth");
+		}
+		else
+		{
+			CReplyToCommand(client, "{Vintage}[Spawn]{Default} This sentry/dispenser is not yours!");
+			return;
+		}
+	}
+	else
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} Usage: spawn_destroy <dispensers|sentries|all|aim>");
+		return;
+	}
+}
+
+public Action:Command_Slay_Merasmus(client, args)
+{
+	if(!IsValidClient(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "merasmus"))!=-1 && IsValidEntity(entity))
+	{
+		new Handle:event=CreateEvent("merasmus_killed", true);
+		FireEvent(event);
+		AcceptEntityInput(entity, "Kill");
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You slayed Merasmus!");
+	}
+	return Plugin_Continue;
+}
+
+public Action:Command_Slay_Monoculus(client, args)
+{
+	if(!IsValidClient(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "eyeball_boss"))!=-1 && IsValidEntity(entity))
+	{
+		new Handle:event=CreateEvent("eyeball_boss_killed", true);
+		FireEvent(event);
+		AcceptEntityInput(entity, "Kill");
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You slayed Monoculus!");
+	}
+	return Plugin_Continue;
+}
+
+public Action:Command_Slay_Horsemann(client, args)
+{
+	if(!IsValidClient(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "headless_hatman"))!=-1 && IsValidEntity(entity))
+	{
+		new Handle:event=CreateEvent("pumpkin_lord_killed", true);
+		FireEvent(event);
+		AcceptEntityInput(entity, "Kill");
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You slayed the Horseless Headless Horsemann!");
+	}
+	return Plugin_Continue;
+}
+
+public Action:Command_Slay_Tank(client, args)
+{
+	if(!IsValidClient(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "tank_boss"))!=-1 && IsValidEntity(entity))
+	{
+		AcceptEntityInput(entity, "Kill");
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You destroyed a tank!");
+	}
+	return Plugin_Continue;
+}
+
+public Action:Command_Slay_Zombie(client, args)
+{
+	if(!IsValidClient(client))
+	{
+		CReplyToCommand(client, "{Vintage}[Spawn]{Default} This command must be used in-game and without RCON.");
+		return Plugin_Handled;
+	}
+
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "tf_zombie"))!=-1 && IsValidEntity(entity))
+	{
+		AcceptEntityInput(entity, "Kill");
+		CReplyToCommand(client,"{Vintage}[Spawn]{Default} You slayed a zombie!");
+	}
+	return Plugin_Continue;
+}
+
 /*==========MENUS==========*/
 public Action:Command_Menu(client, args)
 {
@@ -887,13 +1069,17 @@ stock CreateMenuGeneral(client)
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
 	AddMenuItem(menu, "tank", "Tank");
 	AddMenuItem(menu, "zombie", "Zombie");
-	DisplayMenu(menu, client, 30);
+	AddMenuItem(menu, "destroy_sentry", "Destroy all sentries");
+	AddMenuItem(menu, "destroy_dispenser", "Destroy all dispensers");
+	AddMenuItem(menu, "destroy_all", "Destroy all sentries and dispensers");
+	AddMenuItem(menu, "destroy_aim", "Destroy the sentry or dispenser you're looking at");
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menupos)
+public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menuPos)
 {
 	new String:selection[32];
-	GetMenuItem(menu, menupos, selection, sizeof(selection));
+	GetMenuItem(menu, menuPos, selection, sizeof(selection));
 	if (action==MenuAction_Select)
 	{
 		if(StrEqual(selection, "cow"))
@@ -906,63 +1092,63 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menupos)
 		}
 		else if(StrEqual(selection, "sentry1"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 1, false);
 		}
 		else if(StrEqual(selection, "sentry1m"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 1, true);
 		}
 		else if(StrEqual(selection, "sentry2"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 2, false);
 		}
 		else if(StrEqual(selection, "sentry2m"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 2, true);
 		}
 		else if(StrEqual(selection, "sentry3"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 3, false);
 		}
 		else if(StrEqual(selection, "sentry3m"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Sentry(client, 0, 3, true);
 		}
 		else if(StrEqual(selection, "dispenser1"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Dispenser(client, 0, 1);
 		}
 		else if(StrEqual(selection, "dispenser2"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Dispenser(client, 0, 2);
 		}
 		else if(StrEqual(selection, "dispenser3"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Dispenser(client, 0, 3);
 		}
 		else if(StrEqual(selection, "ammo_large"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Ammopack(client, 0, "large");
 		}
 		else if(StrEqual(selection, "ammo_medium"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Ammopack(client, 0, "medium");
 		}
 		else if(StrEqual(selection, "ammo_small"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Ammopack(client, 0, "small");
 		}
 		else if(StrEqual(selection, "health_large"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Medipack(client, 0, "large");
 		}
 		else if(StrEqual(selection, "health_medium"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Medipack(client, 0, "medium");
 		}
 		else if(StrEqual(selection, "health_small"))
 		{
-			Menu_Command_Forward(client, selection);
+			Command_Spawn_Medipack(client, 0, "small");
 		}
 		else if(StrEqual(selection, "merasmus"))
 		{
@@ -984,79 +1170,27 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menupos)
 		{
 			Command_Spawn_Zombie(client, 0);
 		}
+		else if(StrEqual(selection, "destroy_sentry"))
+		{
+			Command_Destroy(client, 0, "sentries");
+		}
+		else if(StrEqual(selection, "destroy_dispenser"))
+		{
+			Command_Destroy(client, 0, "dispensers");
+		}
+		else if(StrEqual(selection, "destroy_all"))
+		{
+			Command_Destroy(client, 0, "all");
+		}
+		else if(StrEqual(selection, "destroy_aim"))
+		{
+			Command_Destroy(client, 0, "aim");
+		}
 		else
 		{
 			CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Something went horribly wrong with the menu code!");
 		}
 		CreateMenuGeneral(client);
-	}
-}
-
-public Menu_Command_Forward(client, String:selection[32])
-{
-	if(StrEqual(selection, "sentry1"))
-	{
-		Command_Spawn_Sentry(client, 0, 1, false);
-	}
-	else if(StrEqual(selection, "sentry1m"))
-	{
-		Command_Spawn_Sentry(client, 0, 1, true);
-	}
-	else if(StrEqual(selection, "sentry2"))
-	{
-		Command_Spawn_Sentry(client, 0, 2, false);
-	}
-	else if(StrEqual(selection, "sentry2m"))
-	{
-		Command_Spawn_Sentry(client, 0, 2, true);
-	}
-	else if(StrEqual(selection, "sentry3"))
-	{
-		Command_Spawn_Sentry(client, 0, 3, false);
-	}
-	else if(StrEqual(selection, "sentry3m"))
-	{
-		Command_Spawn_Sentry(client, 0, 3, true);
-	}
-	else if(StrEqual(selection, "dispenser1"))
-	{
-		Command_Spawn_Dispenser(client, 0, 1);
-	}
-	else if(StrEqual(selection, "dispenser2"))
-	{
-		Command_Spawn_Dispenser(client, 0, 2);
-	}
-	else if(StrEqual(selection, "dispenser3"))
-	{
-		Command_Spawn_Dispenser(client, 0, 3);
-	}
-	else if(StrEqual(selection, "ammo_large"))
-	{
-		Command_Spawn_Ammopack(client, 0, "large");
-	}
-	else if(StrEqual(selection, "ammo_medium"))
-	{
-		Command_Spawn_Ammopack(client, 0, "medium");
-	}
-	else if(StrEqual(selection, "ammo_small"))
-	{
-		Command_Spawn_Ammopack(client, 0, "small");
-	}
-	else if(StrEqual(selection, "health_large"))
-	{
-		Command_Spawn_Medipack(client, 0, "large");
-	}
-	else if(StrEqual(selection, "health_medium"))
-	{
-		Command_Spawn_Medipack(client, 0, "medium");
-	}
-	else if(StrEqual(selection, "health_small"))
-	{
-		Command_Spawn_Medipack(client, 0, "small");
-	}
-	else
-	{
-		CReplyToCommand(client, "{Vintage}[Spawn]{Default} {Red}ERROR:{Default} Something went wrong with the menu command forwarding code!  This shouldn't be happening.");
 	}
 }
 
@@ -1119,7 +1253,7 @@ SetTeleportEndPoint(client)
 	GetClientEyePosition(client, origin);
 	GetClientEyeAngles(client, angles);
 
-	new Handle:trace = TR_TraceRayFilterEx(origin, angles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer);
+	new Handle:trace=TR_TraceRayFilterEx(origin, angles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer);
 
 	if(TR_DidHit(trace))
 	{
@@ -1173,14 +1307,14 @@ public Action:Event_Monoculus_Summoned(Handle:event, const String:name[], bool:d
 {
 	if(letsChangeThisEvent!=0)
 	{
-		new Handle:hEvent = CreateEvent(name);
+		new Handle:hEvent=CreateEvent(name);
 		if (hEvent==INVALID_HANDLE)
 		{
 			return Plugin_Handled;
 		}
 		SetEventInt(hEvent, "level", letsChangeThisEvent);
 		FireEvent(hEvent);
-		letsChangeThisEvent = 0;
+		letsChangeThisEvent=0;
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -1256,8 +1390,8 @@ public UpdateBossHealth(entity)
 	}
 	else
 	{
-		percentage = 0;
-	}	
+		percentage=0;
+	}
 	SetEntProp(healthBar, Prop_Send, "m_iBossHealthPercentageByte", percentage);
 }
 
@@ -1313,7 +1447,7 @@ public OnClientConnected(client)
 public OnClientDisconnect(client)
 {
 	if(!IsFakeClient(client))
-	{		
+	{
 		peopleConnected--;
 	}
 
@@ -1473,14 +1607,14 @@ PrecacheMerasmus()
 		}
 	}
 
-	for(new i = 1; i <= 9; i++)
+	for(new i=1; i <= 9; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_found0%d.wav", i);
 		PrecacheSound(iString, true);
 	}
 
-	for(new i = 3; i <= 6; i++)
+	for(new i=3; i <= 6; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_grenades0%d.wav", i);
@@ -1505,7 +1639,7 @@ PrecacheMerasmus()
 		}
 	}
 
-	for(new i = 1; i <= 19; i++)
+	for(new i=1; i <= 19; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
@@ -1722,6 +1856,7 @@ PrecacheZombie()
 public Action:Command_Spawn_Help(client, args)
 {
 	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Available entities (append the name to spawn_):  cow, explosive_barrel, ammopack <large|medium|small>, medipack <large|medium|small>, sentry <1|2|3|4|5|6> (4-6 are level 1-3 mini-sentries), dispenser <1|2|3>, merasmus <health>, monoculus <level>, horsemann, tank, zombie");
+	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Need to destroy something?  Try {Skyblue}spawn_destroy <sentries|dispensers|all|aim>{Default}!");
 	CReplyToCommand(client, "{Vintage}[Spawn]{Default} Still confused?  Type {Skyblue}spawn{Default} or {Skyblue}spawn_menu{Default} to bring up the Spawn menu!");
 	return Plugin_Continue;
 }
@@ -1729,6 +1864,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 Beta 9 (September 27, 2013 A.D.):  Added sentry/dispenser destroy code and removed Menu Command Forward code (not sure why I implemented that in the first place...), fixed medipacks, ammopacks, and Merasmus again.
 1.0.0 Beta 8 (September 25, 2013 A.D.):  Finished implementing standalone menu code and worked a bit on the admin menu.  Might not work as intended.
 1.0.0 Beta 7 (September 24, 2013 A.D.):  Changed sentry/dispenser code again (added mini-sentries!), added big error messages, added another line to spawn_help, started to implement the menu code, corrected more typos, and optimized/re-organized more code.
 1.0.0 Beta 6 (September 23, 2013 A.D.):  Fixed spawn_help's Plugin_Handled->Plugin_Continue, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
