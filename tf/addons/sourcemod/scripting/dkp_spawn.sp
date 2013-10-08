@@ -13,9 +13,11 @@
 
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
+#include <updater>
 
-#define PLUGIN_VERSION "1.0.0 Beta 12"
+#define PLUGIN_VERSION "1.0.0 Beta 13"
 #define MAXENTITIES 256
+#define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
 
 new Handle:MerasmusBaseHP=INVALID_HANDLE;
 new Handle:MerasmusHPPerPlayer=INVALID_HANDLE;
@@ -64,6 +66,11 @@ public OnPluginStart()
 	{
 		OnAdminMenuReady(topmenu);
 	}
+
+	if(LibraryExists("updater"))
+    {
+        Updater_AddPlugin(UPDATE_URL);
+    }
 }
 
 public OnMapStart()
@@ -75,6 +82,14 @@ public OnMapStart()
 	PrecacheZombie();
 	FindHealthBar();
 	people=0;
+}
+
+public OnLibraryAdded(const String:name[])
+{
+    if(StrEqual(name, "updater"))
+    {
+        Updater_AddPlugin(UPDATE_URL);
+    }
 }
 
 public OnLibraryRemoved(const String:name[])
@@ -1966,6 +1981,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 Beta 13 (October 7, 2013 A.D.):  Added experimental Updater support.
 1.0.0 Beta 12 (October 7, 2013 A.D.):  Major refactor of spawn commands, added way more info to spawn_help, changed all CReplyToCommands to CPrintToChats except for the IsValidClient checks, hopefully fixed dispenser's model being incorrect, forbid spectators from spawning buildings and removing entities using "aim", slight code formatting, and changed around Merasmus' and Monoculus' avaliable arguments.
 1.0.0 Beta 11 (October 3, 2013 A.D.):  Changed Plugin_Continue back to Plugin_Handled, changed the spawn command to let you manually choose an entity to spawn, fixed entity health, changed spawn_medipack to spawn_healthpack, fixed being spammed whenever you removed an entity, more minor code formatting, and changed "Headless Horseless Horsemann" to "Horseless Headless Horsemann".
 1.0.0 Beta 10 (October 2, 2013 A.D.):  Changed some ReplyToCommands back to PrintToChats, refactored remove code, removed menu destroy code, changed if(client<1) to if(IsValidClient(client)), formatted some code, and fixed Merasmus for hopefully the very last time...
