@@ -1,14 +1,17 @@
 Spawn
 =====
 
-#### LATEST VERSION:  1.0.0 Beta 13
+**LATEST VERSION:  1.0.0 RC 1**
 
 A plugin for TF2 that allows admins to spawn a bunch of entities (and then remove them) without turning on cheats.
 
-**REQUIRES SOURCEMOD!**
+Required:
+* Sourcemod (preferably the latest version)
+* [More Colors](http://forums.alliedmods.net/showthread.php?t=185016)
+* [SDK Hooks](http://forums.alliedmods.net/showthread.php?t=106748) - Included with Sourcemod 1.5.0+
 
-Optional plugins:
-* Adminmenu (should come with SM)
+Recommended:
+* Adminmenu - Included with Sourcemod
 * [Updater](http://forums.alliedmods.net/showthread.php?t=169095)
 
 Community website:  www.50dkp.com

@@ -4,9 +4,10 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 Beta 13"
+			"Latest"	"1.0.0 RC 1"
 		}
-		"Notes"	"Added (experimental) Updater support!"
+		"Notes"	"Finished implementing admin menu"
+		"Notes"	"Tried fixing disabled sentries"
 	}
 
 	"Files"

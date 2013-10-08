@@ -1,4 +1,3 @@
-//TODO:  ADMIN MENU, SENTRY/DISPENSER
 //Thanks to abrandnewday, DarthNinja, HL-SDK, X3Mano, and others for your plugins that were so helpful to me in writing my plugin!
 //Changelog is at the very bottom.
 
@@ -15,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 Beta 13"
+#define PLUGIN_VERSION "1.0.0 RC 1"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
 
@@ -426,6 +425,7 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 
 	SetEntProp(entity, Prop_Send, "m_ammoShells", shells);
 	SetEntProp(entity, Prop_Send, "m_ammoRockets", rockets);
+	SetEntProp(entity, Prop_Send, "m_bDisabled", 0);  //Hopefully fixes disabled sentries...
 	SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
 	SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
 	SetEntProp(entity, Prop_Send, "m_health", health);
@@ -1110,7 +1110,7 @@ public Action:Command_Menu(client, args)
 stock CreateMenuGeneral(client)
 {
 	new Handle:menu=CreateMenu(MenuHandlerGeneral);
-	SetMenuTitle(menu, "Spawn Menu");
+	SetMenuTitle(menu, "Choose entity:");
 	AddMenuItem(menu, "cow", "Cow");
 	AddMenuItem(menu, "explosive_barrel", "Explosive Barrel");
 	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
@@ -1133,6 +1133,7 @@ stock CreateMenuGeneral(client)
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
 	AddMenuItem(menu, "tank", "Tank");
 	AddMenuItem(menu, "zombie", "Zombie");
+	SetMenuExitBackButton(menu, true);
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
@@ -1244,46 +1245,26 @@ public OnAdminMenuReady(Handle:topmenu)
 	{
 		return;
 	}
-}
+	adminMenu=topmenu;
+	new TopMenuObject:player_commands=FindTopMenuCategory(adminMenu, ADMINMENU_PLAYERCOMMANDS);
 
-/*AttachAdminMenu()
-{
-	AddToTopMenu(adminMenu, "Spawn Commands", TopMenuObject_Category, CategoryHandler, INVALID_TOPMENUOBJECT);
+	if(player_commands!=INVALID_TOPMENUOBJECT)
+	{
+		AddToTopMenu(adminMenu, "spawn", TopMenuObject_Item, AdminMenu_Spawn, player_commands, "spawn", ADMFLAG_GENERIC);
+	}
 }
  
-public CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuObject:objectID, param, String:buffer[], maxlength)
-{
-	if(action==TopMenuAction_DisplayTitle)
-	{
-		Format(buffer, maxlength, "Spawn Commands:");
-	}
-	else if(action==TopMenuAction_DisplayOption)
-	{
-		Format(buffer, maxlength, "Spawn Commands");
-	}
-}
-
-AttachAdminMenu()
-{
-	new TopMenuObject:spawnCommands=FindTopMenuCategory(adminMenu, "Spawn Commands");
-	if(spawnCommands==INVALID_TOPMENUOBJECT)
-	{
-		return;
-	}
-	AddToTopMenu(adminMenu, "spawn_cow", TopMenuObject_Item, AdminMenu_Poke, spawnCommands, "spawn_cow", ADMFLAG_GENERIC);
-}
- 
-public AdminMenu_Cow(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
+public AdminMenu_Spawn(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, client, String:buffer[], maxlength)
 {
 	if(action==TopMenuAction_DisplayOption)
 	{
-		Format(buffer, maxlength, "Cow");
+		Format(buffer, maxlength, "Spawn");
 	}
 	else if(action==TopMenuAction_SelectOption)
 	{
-		//TODO
+		CreateMenuGeneral(client);
 	}
-}*/
+}
 
 /*==========TECHNICAL STUFF==========*/
 SetTeleportEndPoint(client)
@@ -1981,6 +1962,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
 1.0.0 Beta 13 (October 7, 2013 A.D.):  Added experimental Updater support.
 1.0.0 Beta 12 (October 7, 2013 A.D.):  Major refactor of spawn commands, added way more info to spawn_help, changed all CReplyToCommands to CPrintToChats except for the IsValidClient checks, hopefully fixed dispenser's model being incorrect, forbid spectators from spawning buildings and removing entities using "aim", slight code formatting, and changed around Merasmus' and Monoculus' avaliable arguments.
 1.0.0 Beta 11 (October 3, 2013 A.D.):  Changed Plugin_Continue back to Plugin_Handled, changed the spawn command to let you manually choose an entity to spawn, fixed entity health, changed spawn_medipack to spawn_healthpack, fixed being spammed whenever you removed an entity, more minor code formatting, and changed "Headless Horseless Horsemann" to "Horseless Headless Horsemann".
