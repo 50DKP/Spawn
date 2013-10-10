@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 RC 1"
+#define PLUGIN_VERSION "1.0.0 RC 2"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
 
@@ -1133,6 +1133,7 @@ stock CreateMenuGeneral(client)
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
 	AddMenuItem(menu, "tank", "Tank");
 	AddMenuItem(menu, "zombie", "Zombie");
+
 	SetMenuExitBackButton(menu, true);
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
@@ -1141,7 +1142,18 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menuPos)
 {
 	new String:selection[32];
 	GetMenuItem(menu, menuPos, selection, sizeof(selection));
-	if(action==MenuAction_Select)
+	if(action==MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+	else if(action==MenuAction_Cancel)
+	{
+		if(menuPos==MenuCancel_ExitBack && menu!=INVALID_HANDLE)
+		{
+			DisplayTopMenu(menu, client, TopMenuPosition_LastCategory);
+		}
+	}
+	else if(action==MenuAction_Select)
 	{
 		if(StrEqual(selection, "cow"))
 		{
@@ -1263,6 +1275,7 @@ public AdminMenu_Spawn(Handle:topmenu, TopMenuAction:action, TopMenuObject:objec
 	else if(action==TopMenuAction_SelectOption)
 	{
 		CreateMenuGeneral(client);
+		RedisplayAdminMenu(topmenu, client);
 	}
 }
 
@@ -1962,6 +1975,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
 1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
 1.0.0 Beta 13 (October 7, 2013 A.D.):  Added experimental Updater support.
 1.0.0 Beta 12 (October 7, 2013 A.D.):  Major refactor of spawn commands, added way more info to spawn_help, changed all CReplyToCommands to CPrintToChats except for the IsValidClient checks, hopefully fixed dispenser's model being incorrect, forbid spectators from spawning buildings and removing entities using "aim", slight code formatting, and changed around Merasmus' and Monoculus' avaliable arguments.

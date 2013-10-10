@@ -4,10 +4,9 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 RC 1"
+			"Latest"	"1.0.0 RC 2"
 		}
-		"Notes"	"Finished implementing admin menu"
-		"Notes"	"Tried fixing disabled sentries"
+		"Notes"	"Made admin menu redisplay itself (like slap does) and added more robust admin menu support."
 	}
 
 	"Files"

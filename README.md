@@ -1,12 +1,12 @@
 Spawn
 =====
 
-**LATEST VERSION:  1.0.0 RC 1**
+**LATEST VERSION:  1.0.0 RC 2**
 
 A plugin for TF2 that allows admins to spawn a bunch of entities (and then remove them) without turning on cheats.
 
 Required:
-* Sourcemod (preferably the latest version)
+* [Sourcemod](http://www.sourcemod.net/downloads.php) (preferably the latest version if you already have it)
 * [More Colors](http://forums.alliedmods.net/showthread.php?t=185016)
 * [SDK Hooks](http://forums.alliedmods.net/showthread.php?t=106748) - Included with Sourcemod 1.5.0+
 
@@ -14,7 +14,7 @@ Recommended:
 * Adminmenu - Included with Sourcemod
 * [Updater](http://forums.alliedmods.net/showthread.php?t=169095)
 
-Community website:  www.50dkp.com
+Community website:  [www.50dkp.com](http://www.50dkp.com)
 
 List of supported entities:
 * cow
