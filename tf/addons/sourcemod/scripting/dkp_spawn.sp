@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 RC 2"
+#define PLUGIN_VERSION "1.0.0 RC 3"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
 
@@ -248,7 +248,7 @@ stock Command_Spawn_Cow(client)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	SetEntityMoveType(entity, MOVETYPE_VPHYSICS);
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
-	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working?
+	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a cow!");
 	LogAction(client, client, "[Spawn] \"%L\" spawned a cow", client);
@@ -269,7 +269,7 @@ stock Command_Spawn_Explosive_Barrel(client)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	SetEntityMoveType(entity, MOVETYPE_VPHYSICS);
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
-	SetEntProp(entity, Prop_Data, "m_nSolidType", 6);
+	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned an explosive barrel!");
 	LogAction(client, client, "[Spawn] \"%L\" spawned an explosive barrel", client);
@@ -358,7 +358,7 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	decl String:model[64];
 	new shells, health, rockets;
 	new team=GetClientTeam(client);
-	if(team==2)
+	if(team==_:TFTeam_Spectator)
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} You must be on either {Red}RED{Default} or {Blue}BLU{Default} to use this command.");
 		return;
@@ -480,7 +480,7 @@ stock Command_Spawn_Dispenser(client, level=1)
 	new health;
 	new ammo=400;
 	new team=GetClientTeam(client);
-	if(team==2)
+	if(team==_:TFTeam_Spectator)
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} You must be on either {Red}RED{Default} or {Blue}BLU{Default} to use this command.");
 		return;
@@ -1975,6 +1975,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 RC 3 (October 17, 2013 A.D.):  Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
 1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
 1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
 1.0.0 Beta 13 (October 7, 2013 A.D.):  Added experimental Updater support.

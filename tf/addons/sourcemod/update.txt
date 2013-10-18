@@ -4,9 +4,9 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 RC 2"
+			"Latest"	"1.0.0 RC 3"
 		}
-		"Notes"	"Made admin menu redisplay itself (like slap does) and added more robust admin menu support."
+		"Notes"	"Fixed RED not being able to spawn buildings."
 	}
 
 	"Files"
