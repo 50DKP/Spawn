@@ -16,7 +16,7 @@
 
 #define PLUGIN_VERSION "1.0.0 RC 4"
 #define MAXENTITIES 256
-#define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
+#define UPDATE_URL "https://bitbucket.org/50Wliu/spawn/raw/a674edf4f825ef5d5e2c23fc636484d3fa7300f5/tf/addons/sourcemod/update.txt"  //So ugly :(
 
 new Handle:MerasmusBaseHP=INVALID_HANDLE;
 new Handle:MerasmusHPPerPlayer=INVALID_HANDLE;
@@ -1955,7 +1955,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
-1.0.0 RC 4 (November 16, 2013 A.D.):  Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.
+1.0.0 RC 4 (November 16, 2013 A.D.):  Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.  Changed Updater link to BitBucket.
 1.0.0 RC 3 (October 17, 2013 A.D.):  Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
 1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
 1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
