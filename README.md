@@ -1,7 +1,7 @@
 Spawn
 =====
 
-**LATEST VERSION:  1.0.0 RC 3**
+**LATEST VERSION:  1.0.0 RC 4**
 
 A plugin for TF2 that allows admins to spawn a bunch of entities (and then remove them) without turning on cheats.
 
