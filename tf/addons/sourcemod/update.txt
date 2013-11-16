@@ -4,9 +4,13 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 RC 3"
+			"Latest"	"1.0.0 RC 4"
 		}
-		"Notes"	"Fixed RED not being able to spawn buildings."
+		"Notes"	"Fixed RED not being able to remove buildings"
+		"Notes"	"Changed all zombie references to skeleton"
+		"Notes"	"Removed PrecacheZombie() (no longer needed)"
+		"Notes"	"Fixed Merasmus's HP always being the default value"
+		"Notes"	"Another speculative fix for sentries and dispensers"
 	}
 
 	"Files"

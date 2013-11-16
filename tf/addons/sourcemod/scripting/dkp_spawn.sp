@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 RC 3"
+#define PLUGIN_VERSION "1.0.0 RC 4"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://github.com/50DKP/Spawn/blob/master/update.txt"
 
@@ -47,7 +47,7 @@ public OnPluginStart()
 
 	RegAdminCmd("spawn", Command_Spawn, ADMFLAG_GENERIC, "Manually choose an entity to spawn!  Usage: spawn <entity> <level/health> <mini>.  0 arguments will bring up the menu.  Use spawn_help to see the list of entities.");
 	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the menu!");
-	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim>.  Note:  Selecting an entity will delete ALL entites of that type (except sentries and dispensers)!");
+	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim>.  Note:  Selecting an entity will delete ALL entites of that type (except buildings)!");
 	RegAdminCmd("spawn_help", Command_Spawn_Help, ADMFLAG_GENERIC, "Need some help?  Come here!  Usage:  spawn_help <entity>.  0 arguments will bring up the generic help text.");
 
 	MerasmusBaseHP=FindConVar("tf_merasmus_health_base");
@@ -78,7 +78,7 @@ public OnMapStart()
 	PrecacheMerasmus();
 	PrecacheMonoculus();
 	PrecacheHorsemann();
-	PrecacheZombie();
+	//PrecacheZombie();
 	FindHealthBar();
 	people=0;
 }
@@ -204,7 +204,12 @@ public Action:Command_Spawn(client, args)
 	}
 	else if(StrEqual(selection, "merasmus", false))
 	{
-		Command_Spawn_Merasmus(client, 0);
+		new health=-131313;
+		if(args==2)
+		{
+			health=StringToInt(other);
+		}
+		Command_Spawn_Merasmus(client, health);
 		return Plugin_Handled;
 	}
 	else if(StrEqual(selection, "monoculus", false))
@@ -222,14 +227,14 @@ public Action:Command_Spawn(client, args)
 		Command_Spawn_Tank(client);
 		return Plugin_Handled;
 	}
-	else if(StrEqual(selection, "zombie", false))
+	else if(StrEqual(selection, "skeleton", false))
 	{
-		Command_Spawn_Zombie(client);
+		Command_Spawn_Skeleton(client);
 		return Plugin_Handled;
 	}
 	else
 	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default}  Usage: spawn <entity> <level/health>.  0 arguments will open up the menu.");
+		CPrintToChat(client, "{Vintage}[Spawn]{Default}  Invalid argument!  Usage: spawn <entity> <level/health>.  0 arguments will open up the menu.");
 		return Plugin_Handled;
 	}
 }
@@ -244,7 +249,7 @@ stock Command_Spawn_Cow(client)
 	}
 	SetEntityModel(entity, "models/props_2fort/cow001_reference.mdl");
 	DispatchSpawn(entity);
-	position[2] -= 10.0;
+	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	SetEntityMoveType(entity, MOVETYPE_VPHYSICS);
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
@@ -358,6 +363,7 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	decl String:model[64];
 	new shells, health, rockets;
 	new team=GetClientTeam(client);
+	new skin=team-2;
 	if(team==_:TFTeam_Spectator)
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} You must be on either {Red}RED{Default} or {Blue}BLU{Default} to use this command.");
@@ -407,12 +413,6 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 		}
 	}
 
-	new skin=team-2;
-	if(mini && level==1)
-	{
-		skin=team;
-	}
-
 	new entity=CreateEntityByName("obj_sentrygun");
 	if(!IsValidEntity(entity))
 	{
@@ -423,28 +423,29 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	TeleportEntity(entity, position, angles, NULL_VECTOR);
 	SetEntityModel(entity, model);
 
-	SetEntProp(entity, Prop_Send, "m_ammoShells", shells);
-	SetEntProp(entity, Prop_Send, "m_ammoRockets", rockets);
-	SetEntProp(entity, Prop_Send, "m_bDisabled", 0);  //Hopefully fixes disabled sentries...
-	SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
-	SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
-	SetEntProp(entity, Prop_Send, "m_health", health);
-	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_iAmmoShells", shells);
+	SetEntProp(entity, Prop_Send, "m_iHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
-	SetEntProp(entity, Prop_Send, "m_iState", 3);
-	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
+	if(mini && level==1)
+	{
+		skin=team;
+	}
 	SetEntProp(entity, Prop_Send, "m_nSkin", skin);
-	SetEntProp(entity, Prop_Send, "m_teamNum", team);
+	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
+	SetEntProp(entity, Prop_Send, "m_iAmmoRockets", rockets);
 	SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
+	SetEntProp(entity, Prop_Send, "m_iState", 3);
 	SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", level==1 ? 0.99:1.0);
-	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 66.0});
-	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
 	if(level==1)
 	{
 		SetEntProp(entity, Prop_Send, "m_bBuilding", 1);
 	}
-
+	SetEntProp(entity, Prop_Send, "m_bPlayerControlled", 1);
+	SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 66.0});
+	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
 	if(mini)
 	{
 		SetEntProp(entity, Prop_Send, "m_miniBuilding", 1);
@@ -520,7 +521,6 @@ stock Command_Spawn_Dispenser(client, level=1)
 	}
 	DispatchSpawn(entity);
 	TeleportEntity(entity, position, angles, NULL_VECTOR);
-	SetEntityModel(entity, model);
 
 	SetVariantInt(team);
 	AcceptEntityInput(entity, "TeamNum");
@@ -529,16 +529,15 @@ stock Command_Spawn_Dispenser(client, level=1)
 
 	ActivateEntity(entity);
 
-	SetEntProp(entity, Prop_Send, "m_ammoMetal", ammo);
-	SetEntProp(entity, Prop_Send, "m_health", health);
+	SetEntProp(entity, Prop_Send, "m_iAmmoMetal", ammo);
+	SetEntProp(entity, Prop_Send, "m_iHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Dispenser);
+	SetEntProp(entity, Prop_Send, "m_iTeamNum", team);
+	SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
+	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
 	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
 	SetEntProp(entity, Prop_Send, "m_iState", 3);
-	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
-	SetEntProp(entity, Prop_Send, "m_nSkin", team-2);
-	SetEntProp(entity, Prop_Send, "m_teamNum", team);
-	SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
 	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 55.0});
 	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
 	SetEntPropFloat(entity, Prop_Send, "m_flPercentageConstructed", level==1 ? 0.99:1.0);
@@ -546,6 +545,8 @@ stock Command_Spawn_Dispenser(client, level=1)
 	{
 		SetEntProp(entity, Prop_Send, "m_bBuilding", 1);
 	}
+	SetEntPropEnt(entity, Prop_Send, "m_hBuilder", client);
+	SetEntityModel(entity, model);
 
 	new offs=FindSendPropInfo("CObjectDispenser", "m_iDesiredBuildRotations");
 	if(offs<=0)
@@ -678,9 +679,9 @@ stock Command_Spawn_Tank(client)
 	return;
 }
 
-stock Command_Spawn_Zombie(client)
+stock Command_Spawn_Skeleton(client)
 {
-	new entity=CreateEntityByName("tf_zombie");
+	new entity=CreateEntityByName("tf_zombie");  //Because apparently zombies are skeletons... <.<
 	if(!IsValidEntity(entity))
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
@@ -690,8 +691,8 @@ stock Command_Spawn_Zombie(client)
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a zombie!");
-	LogAction(client, client, "[Spawn] \"%L\" spawned a zombie", client);
+	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a skeleton!");
+	LogAction(client, client, "[Spawn] \"%L\" spawned a skeleton", client);
 	return;
 }
 
@@ -1019,7 +1020,7 @@ public Action:Command_Remove(client, args)
 		}
 		return Plugin_Handled;
 	}
-	else if(StrEqual(selection, "zombie", false))
+	else if(StrEqual(selection, "skeleton", false))
 	{
 		while((entity=FindEntityByClassname(entity, "tf_zombie"))!=-1 && IsValidEntity(entity))
 		{
@@ -1032,25 +1033,25 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only zombie!");
-				LogAction(client, client, "[Spawn] \"%L\" slayed the only zombie", client);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only skeleton!");
+				LogAction(client, client, "[Spawn] \"%L\" slayed the only skeleton", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i zombies!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i zombies", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i skeletons!", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i skeletons", client, count);
 			}
 			count=0;
 		}
 		else
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Couldn't find any zombies to slay!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} Couldn't find any skeletons to slay!");
 		}
 		return Plugin_Handled;
 	}
 	else if(StrEqual(selection, "aim", false))
 	{
-		if(GetClientTeam(client)==2)
+		if(GetClientTeam(client)==_:TFTeam_Spectator)
 		{
 			CPrintToChat(client, "{Vintage}[Spawn]{Default} You must be on either {Red}RED{Default} or {Blue}BLU{Default} to use this command.");
 			return Plugin_Handled;
@@ -1132,7 +1133,7 @@ stock CreateMenuGeneral(client)
 	AddMenuItem(menu, "monoculus", "Monoculus");
 	AddMenuItem(menu, "hhh", "Horseless Headless Horsemann");
 	AddMenuItem(menu, "tank", "Tank");
-	AddMenuItem(menu, "zombie", "Zombie");
+	AddMenuItem(menu, "skeleton", "Skeleton");
 
 	SetMenuExitBackButton(menu, true);
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
@@ -1239,9 +1240,9 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menuPos)
 		{
 			Command_Spawn_Tank(client);
 		}
-		else if(StrEqual(selection, "zombie"))
+		else if(StrEqual(selection, "skeleton"))
 		{
-			Command_Spawn_Zombie(client);
+			Command_Spawn_Skeleton(client);
 		}
 		else
 		{
@@ -1490,15 +1491,7 @@ public OnClientDisconnect(client)
 	}
 
 	new entity=-1;
-	while((entity=FindEntityByClassname(entity, "obj_sentrygun"))!=-1)
-	{
-		if(GetEntPropEnt(entity, Prop_Send, "m_hBuilder")==client)
-		{
-			SetVariantInt(9999);
-			AcceptEntityInput(entity, "RemoveHealth");
-		}
-	}
-	while((entity=FindEntityByClassname(entity, "obj_dispenser"))!=-1)
+	while((entity=FindEntityByClassname(entity, "obj_sentrygun"))!=-1 || (entity=FindEntityByClassname(entity, "obj_dispenser"))!=-1)
 	{
 		if(GetEntPropEnt(entity, Prop_Send, "m_hBuilder")==client)
 		{
@@ -1645,14 +1638,14 @@ PrecacheMerasmus()
 		}
 	}
 
-	for(new i=1; i <= 9; i++)
+	for(new i=1; i<=9; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_found0%d.wav", i);
 		PrecacheSound(iString, true);
 	}
 
-	for(new i=3; i <= 6; i++)
+	for(new i=3; i<=6; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_grenades0%d.wav", i);
@@ -1677,7 +1670,7 @@ PrecacheMerasmus()
 		}
 	}
 
-	for(new i=1; i <= 19; i++)
+	for(new i=1; i<=19; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
@@ -1877,19 +1870,6 @@ PrecacheHorsemann()
 	PrecacheSound("weapons/halloween_boss/knight_axe_miss.wav", true);
 }
 
-PrecacheZombie()
-{
-	PrecacheModel("models/player/items/scout/scout_zombie.mdl", true);
-	PrecacheModel("models/player/items/soldier/soldier_zombie.mdl", true);
-	PrecacheModel("models/player/items/pyro/pyro_zombie.mdl", true);
-	PrecacheModel("models/player/items/demo/demo_zombie.mdl", true);
-	PrecacheModel("models/player/items/heavy/heavy_zombie.mdl", true);
-	PrecacheModel("models/player/items/engineer/engineer_zombie.mdl", true);
-	PrecacheModel("models/player/items/medic/medic_zombie.mdl", true);
-	PrecacheModel("models/player/items/sniper/sniper_zombie.mdl", true);
-	PrecacheModel("models/player/items/spy/spy_zombie.mdl", true);
-}
-
 /*==========HELP==========*/
 public Action:Command_Spawn_Help(client, args)
 {
@@ -1947,9 +1927,9 @@ public Action:Command_Spawn_Help(client, args)
 			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn tank{Default} in console and you're done!");
 			return Plugin_Handled;
 		}
-		else if(StrEqual(help, "zombie", false))
+		else if(StrEqual(help, "skeleton", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn zombie{Default} in console and you're done!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn skeleton{Default} in console and you're done!");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "remove", false))
@@ -1965,7 +1945,7 @@ public Action:Command_Spawn_Help(client, args)
 	}
 	else
 	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} Available entities:  cow, explosive_barrel, ammopack <large|medium|small>, healthpack <large|medium|small>, sentry <level> <mini (true/false)>, dispenser <level>, merasmus <health>, monoculus <level>, hhh, tank, zombie");
+		CPrintToChat(client, "{Vintage}[Spawn]{Default} Available entities:  cow, explosive_barrel, ammopack <large|medium|small>, healthpack <large|medium|small>, sentry <level> <mini (true/false)>, dispenser <level>, merasmus <health>, monoculus <level>, hhh, tank, skeleton");
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Need to remove something?  Try {Skyblue}spawn_remove <entity|aim>{Default}!");
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Still confused?  Type {Skyblue}spawn_menu{Default} to bring up the menu!  You could also try {Skyblue}spawn_help <entity>{Default}.");
 		return Plugin_Handled;
@@ -1975,6 +1955,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 RC 4 (November 16, 2013 A.D.):  Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.
 1.0.0 RC 3 (October 17, 2013 A.D.):  Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
 1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
 1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
