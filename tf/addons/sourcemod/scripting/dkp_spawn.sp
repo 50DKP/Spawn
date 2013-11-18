@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 RC 4"
+#define PLUGIN_VERSION "1.0.0 RC 5"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://bitbucket.org/50Wliu/spawn/raw/a674edf4f825ef5d5e2c23fc636484d3fa7300f5/tf/addons/sourcemod/update.txt"  //So ugly :(
 
@@ -78,7 +78,6 @@ public OnMapStart()
 	PrecacheMerasmus();
 	PrecacheMonoculus();
 	PrecacheHorsemann();
-	//PrecacheZombie();
 	FindHealthBar();
 	people=0;
 }
@@ -156,22 +155,22 @@ public Action:Command_Spawn(client, args)
 	}
 	else if(StrEqual(selection, "ammopack", false))
 	{
-		new String:ammosize[128]="large";
+		new String:size[128]="large";
 		if(args==2)
 		{
-			ammosize=other;
+			size=other;
 		}
-		Command_Spawn_Ammopack(client, ammosize);
+		Command_Spawn_Ammopack(client, size);
 		return Plugin_Handled;
 	}
 	else if(StrEqual(selection, "healthpack", false))
 	{
-		new String:healthsize[128]="large";
+		new String:size[128]="large";
 		if(args==2)
 		{
-			healthsize=other;
+			size=other;
 		}
-		Command_Spawn_Healthpack(client, healthsize);
+		Command_Spawn_Healthpack(client, size);
 		return Plugin_Handled;
 	}
 	else if(StrEqual(selection, "sentry", false))
@@ -256,6 +255,7 @@ stock Command_Spawn_Cow(client)
 	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a cow!");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a cow.");
 	LogAction(client, client, "[Spawn] \"%L\" spawned a cow", client);
 	return;
 }
@@ -277,29 +277,30 @@ stock Command_Spawn_Explosive_Barrel(client)
 	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned an explosive barrel!");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned an explosive barrel.");
 	LogAction(client, client, "[Spawn] \"%L\" spawned an explosive barrel", client);
 	return;
 }
 
-stock Command_Spawn_Ammopack(client, String:ammosize[128])
+stock Command_Spawn_Ammopack(client, String:size[128])
 {
 	new entity=CreateEntityByName("item_ammopack_full");
-	if(StrEqual(ammosize, "large", false))
+	if(StrEqual(size, "large", false))
 	{
 		entity=CreateEntityByName("item_ammopack_full");
 	}
-	else if(StrEqual(ammosize, "medium", false))
+	else if(StrEqual(size, "medium", false))
 	{
 		entity=CreateEntityByName("item_ammopack_medium");	
 	}
-	else if(StrEqual(ammosize, "small", false))
+	else if(StrEqual(size, "small", false))
 	{
 		entity=CreateEntityByName("item_ammopack_small");
 	}
 	else
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the ammopack size has been set to large.");
-		ammosize="large";
+		size="large";
 		entity=CreateEntityByName("item_ammopack_full");
 	}
 
@@ -314,29 +315,30 @@ stock Command_Spawn_Ammopack(client, String:ammosize[128])
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s ammopack!", ammosize);
-	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, ammosize);
+	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s ammopack!", size);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a %s ammopack.", size);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, size);
 }
 
-stock Command_Spawn_Healthpack(client, String:healthsize[128])
+stock Command_Spawn_Healthpack(client, String:size[128])
 {
 	new entity=CreateEntityByName("item_healthkit_full");
-	if(StrEqual(healthsize, "large", false))
+	if(StrEqual(size, "large", false))
 	{
 		entity=CreateEntityByName("item_healthkit_full");
 	}
-	else if(StrEqual(healthsize, "medium", false))
+	else if(StrEqual(size, "medium", false))
 	{
 		entity=CreateEntityByName("item_healthkit_medium");	
 	}
-	else if(StrEqual(healthsize, "small", false))
+	else if(StrEqual(size, "small", false))
 	{
 		entity=CreateEntityByName("item_healthkit_small");
 	}
 	else
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Since you decided not to use the given options, the healthpack size has been set to large.");
-		healthsize="large";
+		size="large";
 		entity=CreateEntityByName("item_healthkit_full");
 	}
 
@@ -351,8 +353,9 @@ stock Command_Spawn_Healthpack(client, String:healthsize[128])
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s healthpack!", healthsize);
-	LogAction(client, client, "[Spawn] \"%L\" spawned a %s healthpack", client, healthsize);
+	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s healthpack!", size);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned %s healthpack.", size);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a %s healthpack", client, size);
 }
 
 /*==========BUILDINGS==========*/
@@ -463,11 +466,13 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	if(mini)
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i mini-sentry!", level);
+		CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i mini-sentry.", level);
 		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i mini-sentry", client, level);
 	}
 	else
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
+		CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i sentry.", level);
 		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
 	}
 	return;
@@ -557,6 +562,7 @@ stock Command_Spawn_Dispenser(client, level=1)
 	SetEntData(entity, offs-12, 1, 1, true);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i dispenser.", level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
 	return;
 }
@@ -596,6 +602,7 @@ stock Command_Spawn_Merasmus(client, health=-131313)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned Merasmus with %i health!", health);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned Merasmus with %i health.", health);
 	LogAction(client, client, "[Spawn] \"%L\" spawned Merasmus with %i health", client, health);
 	return;
 }
@@ -641,6 +648,7 @@ stock Command_Spawn_Monoculus(client, level=1)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i Monoculus.", level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
 	return;
 }
@@ -658,6 +666,7 @@ stock Command_Spawn_Horsemann(client)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned the Horseless Headless Horsemann!");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned the Horseless Headless Horsemann.");
 	LogAction(client, client, "[Spawn] \"%L\" spawned the Horseless Headless Horsemann", client);
 	return;
 }
@@ -675,13 +684,14 @@ stock Command_Spawn_Tank(client)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a tank!");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a tank.");
 	LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
 	return;
 }
 
 stock Command_Spawn_Skeleton(client)
 {
-	new entity=CreateEntityByName("tf_zombie");  //Because apparently zombies are skeletons... <.<
+	new entity=CreateEntityByName("tf_zombie");
 	if(!IsValidEntity(entity))
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} The entity was invalid!");
@@ -692,6 +702,7 @@ stock Command_Spawn_Skeleton(client)
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a skeleton!");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a skeleton.");
 	LogAction(client, client, "[Spawn] \"%L\" spawned a skeleton", client);
 	return;
 }
@@ -732,12 +743,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only cow!");
-				LogAction(client, client, "[Spawn] \"%L\" slayed the only cow", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed the only cow.");
+				LogAction(client, client, "[Spawn] \"%L\" slayed one cow", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i cows!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i cows", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i cows!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i cows.", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed all %i cows", client, count);
 			}
 			count=0;
 		}
@@ -761,12 +774,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed the only explosive barrel!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed the only explosive barrel.");
 				LogAction(client, client, "[Spawn] \"%L\" removed the only explosive barrel", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed %i explosive barrels!", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed %i explosive barrels", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i explosive barrels!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i explosive barrels.", count);
+				LogAction(client, client, "[Spawn] \"%L\" removed all %i explosive barrels", client, count);
 			}
 			count=0;
 		}
@@ -790,12 +805,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed the only ammopack!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed the only ammopack.", count);
 				LogAction(client, client, "[Spawn] \"%L\" removed the only ammopack", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed %i ammopacks!", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed %i ammopacks", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i ammopacks!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i ammopacks.", count);
+				LogAction(client, client, "[Spawn] \"%L\" removed all %i ammopacks", client, count);
 			}
 			count=0;
 		}
@@ -819,12 +836,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed the only healthpack!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed the only healthpack.");
 				LogAction(client, client, "[Spawn] \"%L\" removed the only healthpack", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed %i healthpacks!", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed %i healthpacks", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i healthpacks!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i healthpacks.", count);
+				LogAction(client, client, "[Spawn] \"%L\" removed all %i healthpacks", client, count);
 			}
 			count=0;
 		}
@@ -851,11 +870,13 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed your only sentry!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed his/her only sentry.");
 				LogAction(client, client, "[Spawn] \"%L\" destroyed his/her only sentry", client);
 			}
 			else
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i of your sentries!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i of his/her sentries.", count);
 				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i of his/her sentries", client, count);
 			}
 			count=0;
@@ -883,11 +904,13 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed your only dispenser!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed his/her only dispenser.", count);
 				LogAction(client, client, "[Spawn] \"%L\" destroyed his/her only dispenser", client);
 			}
 			else
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i of your dispensers!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i of his/her dispensers.", count);
 				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i of his/her dispensers", client, count);
 			}
 			count=0;
@@ -914,12 +937,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only Merasmus!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed the only Merasmus.");
 				LogAction(client, client, "[Spawn] \"%L\" slayed the only Merasmus", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i Merasmuses!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i Merasmuses", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i Merasmuses!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i Merasmuses.", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed all %i Merasmuses", client, count);
 			}
 			count=0;
 		}
@@ -945,12 +970,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only Monoculus!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed the only Monoculus.", count);
 				LogAction(client, client, "[Spawn] \"%L\" slayed the only Monoculus", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i Monoculuses!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i Monoculuses", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i Monoculuses!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i Monoculuses.", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed all %i Monoculuses", client, count);
 			}
 			count=0;
 		}
@@ -976,18 +1003,20 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only Horseless Headless Horsemann!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed the only Horseless Headless Horsemann.", count);
 				LogAction(client, client, "[Spawn] \"%L\" slayed the only Horseless Headless Horsemann", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i Horseless Headless Horsemanns!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i Horseless Headless Horsemanns", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i Horseless Headless Horsemenn!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i Horselss Headless Horsemenn.", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed all %i Horseless Headless Horsemenn", client, count);
 			}
 			count=0;
 		}
 		else
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Couldn't find any Horseless Headless Horsemanns to slay!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} Couldn't find any Horseless Headless Horsemenn to slay!");
 		}
 		return Plugin_Handled;
 	}
@@ -1005,12 +1034,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed the only tank!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed the only tank.");
 				LogAction(client, client, "[Spawn] \"%L\" destroyed the only tank", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed %i tanks!", count);
-				LogAction(client, client, "[Spawn] \"%L\" destroyed %i tanks", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i tanks!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i tanks.", count);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i tanks", client, count);
 			}
 			count=0;
 		}
@@ -1034,12 +1065,14 @@ public Action:Command_Remove(client, args)
 			if(count==1)
 			{
 				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed the only skeleton!");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed the only skeleton.", count);
 				LogAction(client, client, "[Spawn] \"%L\" slayed the only skeleton", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed %i skeletons!", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed %i skeletons", client, count);
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i skeletons!", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i skeletons.", count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed all %i skeletons", client, count);
 			}
 			count=0;
 		}
@@ -1070,7 +1103,8 @@ public Action:Command_Remove(client, args)
 			{
 				SetVariantInt(9999);
 				AcceptEntityInput(entity, "RemoveHealth");
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed a building!");
+				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed a building (entity %i)!", entity);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed a building (entity %i).", entity);
 				LogAction(client, client, "[Spawn] \"%L\" removed a building (entity %i)", client, entity);
 				return Plugin_Handled;
 			}
@@ -1084,14 +1118,15 @@ public Action:Command_Remove(client, args)
 		{
 			SetVariantInt(9999);
 			AcceptEntityInput(entity, "Kill");
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed an entity!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed an entity (entity %i)!", entity);
+			CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed an entity (entity %i).", entity);
 			LogAction(client, client, "[Spawn] \"%L\" removed an entity (entity %i)", client, entity);
 			return Plugin_Handled;
 		}
 	}
 	else
 	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} Usage: spawn_remove <entity|aim>");
+		CPrintToChat(client, "{Vintage}[Spawn]{Default} Invalid entity!  Usage: spawn_remove <entity|aim>");
 		return Plugin_Handled;
 	}
 }
@@ -1532,11 +1567,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_appears0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_appears0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_appears%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_appears%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1550,11 +1585,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_attacks0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_attacks0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_attacks%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_attacks%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1568,11 +1603,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_headbomb0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_headbomb0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_headbomb%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_headbomb%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1586,11 +1621,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_held_up0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_held_up0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_held_up%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_held_up%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1602,21 +1637,21 @@ PrecacheMerasmus()
 	for(new i=2; i<=4; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_island0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_island0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=1; i<=3; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_skullhat0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_bcon_skullhat0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=1; i<=2; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_combat_idle0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_combat_idle0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
@@ -1625,11 +1660,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_defeated0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_defeated0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_defeated%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_defeated%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1641,14 +1676,14 @@ PrecacheMerasmus()
 	for(new i=1; i<=9; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_found0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_found0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=3; i<=6; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_grenades0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_grenades0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
@@ -1657,11 +1692,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_headbomb_hit0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_headbomb_hit0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_headbomb_hit%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_headbomb_hit%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1675,11 +1710,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_heal10%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_heal10%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_heal1%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_heal1%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1693,11 +1728,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_idles0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_idles0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_idles%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_hide_idles%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1711,11 +1746,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_leaving0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_leaving0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_leaving%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_leaving%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1727,14 +1762,14 @@ PrecacheMerasmus()
 	for(new i=1; i<=5; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_pain0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_pain0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=4; i<=8; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_ranged_attack0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_ranged_attack0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
@@ -1743,11 +1778,11 @@ PrecacheMerasmus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_staff_magic0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_staff_magic0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_staff_magic%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_merasmus/sf12_staff_magic%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1778,14 +1813,14 @@ PrecacheMonoculus()
 	for(new i=1; i<=3; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball_laugh0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball_laugh0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=1; i<=3; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball_mad0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball_mad0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
@@ -1794,11 +1829,11 @@ PrecacheMonoculus()
 		decl String:iString[PLATFORM_MAX_PATH];
 		if(i<10)
 		{
-			Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball0%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball0%i.wav", i);
 		}
 		else
 		{
-			Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball%d.wav", i);
+			Format(iString, sizeof(iString), "vo/halloween_eyeball/eyeball%i.wav", i);
 		}
 
 		if(FileExists(iString))
@@ -1831,35 +1866,35 @@ PrecacheHorsemann()
 	for(new i=1; i<=2; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_boss/knight_alert0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_boss/knight_alert0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=1; i<=4; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_boss/knight_attack0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_boss/knight_attack0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 
 	for(new i=1; i<=2; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_boss/knight_death0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_boss/knight_death0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 	
 	for(new i=1; i<=4; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_boss/knight_laugh0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_boss/knight_laugh0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 	
 	for(new i=1; i<=3; i++)
 	{
 		decl String:iString[PLATFORM_MAX_PATH];
-		Format(iString, sizeof(iString), "vo/halloween_boss/knight_pain0%d.wav", i);
+		Format(iString, sizeof(iString), "vo/halloween_boss/knight_pain0%i.wav", i);
 		PrecacheSound(iString, true);
 	}
 	PrecacheSound("ui/halloween_boss_summon_rumble.wav", true);
@@ -1877,14 +1912,9 @@ public Action:Command_Spawn_Help(client, args)
 	if(args==1)
 	{
 		GetCmdArg(1, help, sizeof(help));
-		if(StrEqual(help, "cow", false))
+		if(StrEqual(help, "cow", false) || StrEqual(help, "explosive_barrel", false) || StrEqual(help, "hhh", false) || StrEqual(help, "tank", false) || StrEqual(help, "skeleton", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn cow{Default} in console and you're done!");
-			return Plugin_Handled;
-		}
-		else if(StrEqual(help, "explosive_barrel", false))
-		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn explosive_barrel{Default} in console and you're done!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn %s{Default} in console and you're done!", help);
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "ammopack", false))
@@ -1909,27 +1939,12 @@ public Action:Command_Spawn_Help(client, args)
 		}
 		else if(StrEqual(help, "merasmus", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn merasmus <health>{Default} has one argument:  The amount of health Merasmus has.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn merasmus 2394723{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn merasmus <health>{Default} has one argument:  Merasmus's health.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn merasmus 2394723{Default}.");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "monoculus", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn monoculus <level>{Default} has one argument:  Monoculus' level.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn monoculus 3{Default}.");
-			return Plugin_Handled;
-		}
-		else if(StrEqual(help, "hhh", false))
-		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn hhh{Default} in console and you're done!");
-			return Plugin_Handled;
-		}
-		else if(StrEqual(help, "tank", false))
-		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn tank{Default} in console and you're done!");
-			return Plugin_Handled;
-		}
-		else if(StrEqual(help, "skeleton", false))
-		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} Just type {Skyblue}spawn skeleton{Default} in console and you're done!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn monoculus <level>{Default} has one argument:  Monoculus's level.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn monoculus 3{Default}.");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "remove", false))
@@ -1939,7 +1954,7 @@ public Action:Command_Spawn_Help(client, args)
 		}
 		else
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} That wasn't a valid entity!  Try {Skyblue}spawn_help{Default} without any arguments for more info!");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} That wasn't a valid entity!  Try {Skyblue}spawn_help{Default} without any arguments for more info.");
 			return Plugin_Handled;
 		}
 	}
@@ -1955,6 +1970,7 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
+1.0.0 RC 5 (November 18, 2013 A.D.):  Cleaned up the help command and added CShowActivity2.
 1.0.0 RC 4 (November 16, 2013 A.D.):  Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.  Changed Updater link to BitBucket.
 1.0.0 RC 3 (October 17, 2013 A.D.):  Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
 1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.

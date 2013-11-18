@@ -4,13 +4,10 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 RC 4"
+			"Latest"	"1.0.0 RC 5"
 		}
-		"Notes"	"Fixed RED not being able to remove buildings"
-		"Notes"	"Changed all zombie references to skeleton"
-		"Notes"	"Removed PrecacheZombie() (no longer needed)"
-		"Notes"	"Fixed Merasmus's HP always being the default value"
-		"Notes"	"Another speculative fix for sentries and dispensers"
+		"Notes"	"Cleaned up the help command."
+		"Notes"	"Added CShowActivity2."
 	}
 
 	"Files"
