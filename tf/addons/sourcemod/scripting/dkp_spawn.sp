@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 RC 6"
+#define PLUGIN_VERSION "1.0.0 Beta 20"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://bitbucket.org/50Wliu/spawn/raw/a674edf4f825ef5d5e2c23fc636484d3fa7300f5/tf/addons/sourcemod/update.txt"
 
@@ -45,10 +45,10 @@ public OnPluginStart()
 {
 	CreateConVar("spawn_version", PLUGIN_VERSION, "Plugin version (DO NOT HARDCODE)", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 
-	RegAdminCmd("spawn", Command_Spawn, ADMFLAG_GENERIC, "Manually choose an entity to spawn!  Usage: spawn <entity> <level/health> <mini>.  0 arguments will bring up the menu.  Use spawn_help to see the list of entities.");
+	RegAdminCmd("spawn", Command_Spawn, ADMFLAG_GENERIC, "Manually choose an entity to spawn!  Usage: spawn <entity> <level/health>.  0 arguments will bring up the menu.  Use spawn_help to see the list of entities.");
 	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the menu!");
-	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim>.  Note:  Selecting an entity will delete ALL entites of that type (except buildings)!");
-	RegAdminCmd("spawn_help", Command_Spawn_Help, ADMFLAG_GENERIC, "Need some help?  Come here!  Usage:  spawn_help <entity>.  0 arguments will bring up the generic help text.");
+	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim>.");
+	RegAdminCmd("spawn_help", Command_Spawn_Help, ADMFLAG_GENERIC, "Need some help?  Come here!  Usage: spawn_help <entity>.  0 arguments will bring up the generic help text.");
 
 	MerasmusBaseHP=FindConVar("tf_merasmus_health_base");
 	MerasmusHPPerPlayer=FindConVar("tf_merasmus_health_per_player");
@@ -121,7 +121,6 @@ public Action:Command_Spawn(client, args)
 
 	decl String:selection[128];
 	decl String:other[128];
-	decl String:minisentry[128];
 	if(args==1)
 	{
 		GetCmdArg(1, selection, sizeof(selection));
@@ -130,12 +129,6 @@ public Action:Command_Spawn(client, args)
 	{
 		GetCmdArg(1, selection, sizeof(selection));
 		GetCmdArg(2, other, sizeof(other));
-	}
-	else if(args==3)
-	{
-		GetCmdArg(1, selection, sizeof(selection));
-		GetCmdArg(2, other, sizeof(other));
-		GetCmdArg(3, minisentry, sizeof(minisentry));
 	}
 	else
 	{
@@ -176,19 +169,11 @@ public Action:Command_Spawn(client, args)
 	else if(StrEqual(selection, "sentry", false))
 	{
 		new level=1;
-		new bool:mini=false;
 		if(args==2)
 		{
 			level=StringToInt(other);
 		}
-		else if(args==3)
-		{
-			if(StrEqual(minisentry, "true", false))
-			{
-				mini=true;
-			}
-		}
-		Command_Spawn_Sentry(client, level, mini);
+		Command_Spawn_Sentry(client, level);
 		return Plugin_Handled;
 	}
 	else if(StrEqual(selection, "dispenser", false))
@@ -359,10 +344,11 @@ stock Command_Spawn_Healthpack(client, String:size[128])
 }
 
 /*==========BUILDINGS==========*/
-stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
+stock Command_Spawn_Sentry(client, level=1)
 {
 	new Float:angles[3];
 	GetClientEyeAngles(client, angles);
+	angles[0]=0.0;
 	decl String:model[64];
 	new shells, health, rockets;
 	new team=GetClientTeam(client);
@@ -380,20 +366,12 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 			model="models/buildables/sentry1.mdl";
 			shells=100;
 			health=150;
-			if(mini)
-			{
-				health=100;
-			}
 		}
 		case 2:
 		{
 			model="models/buildables/sentry2.mdl";
 			shells=120;
 			health=180;
-			if(mini)
-			{
-				health=120;
-			}
 		}
 		case 3:
 		{
@@ -401,10 +379,6 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 			shells=144;
 			health=216;
 			rockets=20;
-			if(mini)
-			{
-				health=180;
-			}
 		}
 		default:
 		{
@@ -430,10 +404,7 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	SetEntProp(entity, Prop_Send, "m_iHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
-	if(mini && level==1)
-	{
-		skin=team;
-	}
+	SetEntProp(entity, Prop_Send, "m_iTeamNum", team);
 	SetEntProp(entity, Prop_Send, "m_nSkin", skin);
 	SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", level);
 	SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", level);
@@ -449,11 +420,6 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	SetEntProp(entity, Prop_Send, "m_bHasSapper", 0);
 	SetEntPropVector(entity, Prop_Send, "m_vecBuildMaxs", Float:{24.0, 24.0, 66.0});
 	SetEntPropVector(entity, Prop_Send, "m_vecBuildMins", Float:{-24.0, -24.0, 0.0});
-	if(mini)
-	{
-		SetEntProp(entity, Prop_Send, "m_miniBuilding", 1);
-		SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 0.75);
-	}
 
 	new offs=FindSendPropInfo("CObjectSentrygun", "m_iDesiredBuildRotations");
 	if(offs<=0)
@@ -463,18 +429,9 @@ stock Command_Spawn_Sentry(client, level=1, bool:mini=false)
 	}
 	SetEntData(entity, offs-12, 1, 1, true);
 
-	if(mini)
-	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i mini-sentry!", level);
-		CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i mini-sentry.", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i mini-sentry", client, level);
-	}
-	else
-	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
-		CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i sentry.", level);
-		LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
-	}
+	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i sentry.", level);
+	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
 	return;
 }
 
@@ -483,6 +440,7 @@ stock Command_Spawn_Dispenser(client, level=1)
 	decl String:model[128];
 	new Float:angles[3];
 	GetClientEyeAngles(client, angles);
+	angles[0]=0.0;
 	new health;
 	new ammo=400;
 	new team=GetClientTeam(client);
@@ -1185,11 +1143,8 @@ stock CreateMenuGeneral(client)
 	AddMenuItem(menu, "cow", "Cow");
 	AddMenuItem(menu, "explosive_barrel", "Explosive Barrel");
 	AddMenuItem(menu, "sentry1", "Level 1 Sentry");
-	AddMenuItem(menu, "sentry1m", "Level 1 Mini-Sentry");
 	AddMenuItem(menu, "sentry2", "Level 2 Sentry");
-	AddMenuItem(menu, "sentry2m", "Level 2 Mini-Sentry");
 	AddMenuItem(menu, "sentry3", "Level 3 Sentry");
-	AddMenuItem(menu, "sentry3m", "Level 3 Mini-Sentry");
 	AddMenuItem(menu, "dispenser1", "Level 1 Dispenser");
 	AddMenuItem(menu, "dispenser2", "Level 2 Dispenser");
 	AddMenuItem(menu, "dispenser3", "Level 3 Dispenser");
@@ -1236,27 +1191,15 @@ public MenuHandlerGeneral(Handle:menu, MenuAction:action, client, menuPos)
 		}
 		else if(StrEqual(selection, "sentry1"))
 		{
-			Command_Spawn_Sentry(client, 1, false);
-		}
-		else if(StrEqual(selection, "sentry1m"))
-		{
-			Command_Spawn_Sentry(client, 1, true);
+			Command_Spawn_Sentry(client, 1);
 		}
 		else if(StrEqual(selection, "sentry2"))
 		{
-			Command_Spawn_Sentry(client, 2, false);
-		}
-		else if(StrEqual(selection, "sentry2m"))
-		{
-			Command_Spawn_Sentry(client, 2, true);
+			Command_Spawn_Sentry(client, 2);
 		}
 		else if(StrEqual(selection, "sentry3"))
 		{
-			Command_Spawn_Sentry(client, 3, false);
-		}
-		else if(StrEqual(selection, "sentry3m"))
-		{
-			Command_Spawn_Sentry(client, 3, true);
+			Command_Spawn_Sentry(client, 3);
 		}
 		else if(StrEqual(selection, "dispenser1"))
 		{
@@ -1954,37 +1897,32 @@ public Action:Command_Spawn_Help(client, args)
 		}
 		else if(StrEqual(help, "ammopack", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn ammopack <large|medium|small>{Default} has one argument:  The size of the ammopack.  Just choose large, medium, or small!  Example:  {Skyblue}spawn ammopack medium{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn ammopack <large|medium|small>{Default} has one argument: The size of the ammopack.  Just choose large, medium, or small!  Example: {Skyblue}spawn ammopack medium{Default}.");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "healthpack", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn healthpack <large|medium|small>{Default} has one argument:  The size of the healthpack.  Just choose large, medium, or small!  Example:  {Skyblue}spawn healthpack medium{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn healthpack <large|medium|small>{Default} has one argument: The size of the healthpack.  Just choose large, medium, or small!  Example: {Skyblue}spawn healthpack medium{Default}.");
 			return Plugin_Handled;
 		}
-		else if(StrEqual(help, "sentry", false))
+		else if(StrEqual(help, "sentry", false) || StrEqual(help, "dispenser", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn sentry <level> <mini (true/false)>{Default} has two arguments:  The level of the sentry and whether it is a mini-sentry.  Choose 1, 2, or 3 for the first argument and true/false for the second (you don't need to input the second argument if you're not creating a mini-sentry)!  Example:  {Skyblue}spawn sentry 2 true{Default}.");
-			return Plugin_Handled;
-		}
-		else if(StrEqual(help, "dispenser", false))
-		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn dispenser <level>{Default} has one argument:  The level of the dispenser.  Just choose 1, 2, or 3!  Example:  {Skyblue}spawn dispenser 2{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn %s <level>{Default} has one argument: The level of the Ts.  Just choose 1, 2, or 3!  Example: {Skyblue}spawn %s 2{Default}.", help);
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "merasmus", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn merasmus <health>{Default} has one argument:  Merasmus's health.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn merasmus 2394723{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn merasmus <health>{Default} has one argument: Merasmus's health.  Just choose any integer larger than 0!  Example: {Skyblue}spawn merasmus 2394723{Default}.");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "monoculus", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn monoculus <level>{Default} has one argument:  Monoculus's level.  Just choose any integer larger than 0!  Example:  {Skyblue}spawn monoculus 3{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn monoculus <level>{Default} has one argument: Monoculus's level.  Just choose any integer larger than 0!  Example: {Skyblue}spawn monoculus 3{Default}.");
 			return Plugin_Handled;
 		}
 		else if(StrEqual(help, "remove", false))
 		{
-			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn_remove <entity|aim> has one arugment:  How to remove the entity.  You can either choose to remove all of one entity, or the entity you're aiming at.  Example:  {Skyblue}spawn_remove monoculus{Default}.");
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Skyblue}spawn_remove <entity|aim> has one arugment: How to remove the entity.  You can either choose to remove all of one entity, or the entity you're aiming at.  Example: {Skyblue}spawn_remove monoculus{Default}.");
 			return Plugin_Handled;
 		}
 		else
@@ -1995,7 +1933,7 @@ public Action:Command_Spawn_Help(client, args)
 	}
 	else
 	{
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} Available entities:  cow, explosive_barrel, ammopack <large|medium|small>, healthpack <large|medium|small>, sentry <level> <mini (true/false)>, dispenser <level>, merasmus <health>, monoculus <level>, hhh, tank, skeleton");
+		CPrintToChat(client, "{Vintage}[Spawn]{Default} Available entities: cow, explosive_barrel, ammopack <large|medium|small>, healthpack <large|medium|small>, sentry <level>, dispenser <level>, merasmus <health>, monoculus <level>, hhh, tank, skeleton");
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Need to remove something?  Try {Skyblue}spawn_remove <entity|aim>{Default}!");
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Still confused?  Type {Skyblue}spawn_menu{Default} to bring up the menu!  You could also try {Skyblue}spawn_help <entity>{Default}.");
 		return Plugin_Handled;
@@ -2005,20 +1943,21 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
-1.0.0 RC 6 (November 19, 2013 A.D.):  Added m_hOwnerEntity check before removing non-building entities.
-1.0.0 RC 5 (November 18, 2013 A.D.):  Cleaned up the help command and added CShowActivity2.
-1.0.0 RC 4 (November 16, 2013 A.D.):  Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.  Changed Updater link to BitBucket.
-1.0.0 RC 3 (October 17, 2013 A.D.):  Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
-1.0.0 RC 2 (October 10, 2013 A.D.):  Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
-1.0.0 RC 1 (October 8, 2013 A.D.):  Finished admin menu support and tried to fix disabled sentries.
-1.0.0 Beta 13 (October 7, 2013 A.D.):  Added experimental Updater support.
-1.0.0 Beta 12 (October 7, 2013 A.D.):  Major refactor of spawn commands, added way more info to spawn_help, changed all CReplyToCommands to CPrintToChats except for the IsValidClient checks, hopefully fixed dispenser's model being incorrect, forbid spectators from spawning buildings and removing entities using "aim", slight code formatting, and changed around Merasmus' and Monoculus' avaliable arguments.
-1.0.0 Beta 11 (October 3, 2013 A.D.):  Changed Plugin_Continue back to Plugin_Handled, changed the spawn command to let you manually choose an entity to spawn, fixed entity health, changed spawn_medipack to spawn_healthpack, fixed being spammed whenever you removed an entity, more minor code formatting, and changed "Headless Horseless Horsemann" to "Horseless Headless Horsemann".
-1.0.0 Beta 10 (October 2, 2013 A.D.):  Changed some ReplyToCommands back to PrintToChats, refactored remove code, removed menu destroy code, changed if(client<1) to if(IsValidClient(client)), formatted some code, and fixed Merasmus for hopefully the very last time...
-1.0.0 Beta 9 (September 27, 2013 A.D.):  Added sentry/dispenser destroy code and removed Menu Command Forward code (not sure why I implemented that in the first place...), fixed healthpacks, ammopacks, and Merasmus again.
-1.0.0 Beta 8 (September 25, 2013 A.D.):  Finished implementing standalone menu code and worked a bit on the admin menu.  Might not work as intended.
-1.0.0 Beta 7 (September 24, 2013 A.D.):  Changed sentry/dispenser code again (added mini-sentries!), added big error messages, added another line to spawn_help, started to implement the menu code, corrected more typos, and optimized/re-organized more code.
-1.0.0 Beta 6 (September 23, 2013 A.D.):  Fixed spawn_help's Plugin_Continue->Plugin_Handled, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
-1.0.0 Beta 5 (September 23, 2013 A.D.):  Fixed Merasmus, ammopacks, and healthpacks not spawning, fixed some checks activating at the wrong time, re-organized/optimized code, made many messages more verbose, changed Plugin_Handled after the entity spawned to Plugin_Continue, changed CPrintToChat to CReplyToCommand, and added WIP menu code.
-1.0.0 Beta 4 (September 20, 2013 A.D.):  Fixed cows and hopefully Merasmus/ammopacks/healthpacks not spawning, fixed typos, optimized code, created more fallbacks, removed unfinished code, made some messages more verbose, and added more invalid checks.
+1.0.0 Beta 20 (November 24, 2013 A.D.): Fixed sentries always being on RED team, removed minisentries, and downgraded release status.
+1.0.0 Beta 19 (November 19, 2013 A.D.): Added m_hOwnerEntity check before removing non-building entities.
+1.0.0 Beta 18 (November 18, 2013 A.D.): Cleaned up the help command and added CShowActivity2.
+1.0.0 Beta 17 (November 16, 2013 A.D.): Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.  Changed Updater link to BitBucket.
+1.0.0 Beta 16 (October 17, 2013 A.D.): Fixed RED not being able to build sentries and dispensers...  Still need to figure out why they won't ****ing work though.  Also need to figure out why spawning via the menu and via the command will yield different results o.O.
+1.0.0 Beta 15 (October 10, 2013 A.D.): Made admin menu redisplay itself whenever you choose an option (see slap) and added more robust admin menu support.
+1.0.0 Beta 14 (October 8, 2013 A.D.): Finished admin menu support and tried to fix disabled sentries.
+1.0.0 Beta 13 (October 7, 2013 A.D.): Added experimental Updater support.
+1.0.0 Beta 12 (October 7, 2013 A.D.): Major refactor of spawn commands, added way more info to spawn_help, changed all CReplyToCommands to CPrintToChats except for the IsValidClient checks, hopefully fixed dispenser's model being incorrect, forbid spectators from spawning buildings and removing entities using "aim", slight code formatting, and changed around Merasmus' and Monoculus' avaliable arguments.
+1.0.0 Beta 11 (October 3, 2013 A.D.): Changed Plugin_Continue back to Plugin_Handled, changed the spawn command to let you manually choose an entity to spawn, fixed entity health, changed spawn_medipack to spawn_healthpack, fixed being spammed whenever you removed an entity, more minor code formatting, and changed "Headless Horseless Horsemann" to "Horseless Headless Horsemann".
+1.0.0 Beta 10 (October 2, 2013 A.D.): Changed some ReplyToCommands back to PrintToChats, refactored remove code, removed menu destroy code, changed if(client<1) to if(IsValidClient(client)), formatted some code, and fixed Merasmus for hopefully the very last time...
+1.0.0 Beta 9 (September 27, 2013 A.D.): Added sentry/dispenser destroy code and removed Menu Command Forward code (not sure why I implemented that in the first place...), fixed healthpacks, ammopacks, and Merasmus again.
+1.0.0 Beta 8 (September 25, 2013 A.D.): Finished implementing standalone menu code and worked a bit on the admin menu.  Might not work as intended.
+1.0.0 Beta 7 (September 24, 2013 A.D.): Changed sentry/dispenser code again (added mini-sentries!), added big error messages, added another line to spawn_help, started to implement the menu code, corrected more typos, and optimized/re-organized more code.
+1.0.0 Beta 6 (September 23, 2013 A.D.): Fixed spawn_help's Plugin_Continue->Plugin_Handled, tried fixing sentries always being on RED team and not shooting, slightly optimized some more code, made [Spawn] Vintage-colored.
+1.0.0 Beta 5 (September 23, 2013 A.D.): Fixed Merasmus, ammopacks, and healthpacks not spawning, fixed some checks activating at the wrong time, re-organized/optimized code, made many messages more verbose, changed Plugin_Handled after the entity spawned to Plugin_Continue, changed CPrintToChat to CReplyToCommand, and added WIP menu code.
+1.0.0 Beta 4 (September 20, 2013 A.D.): Fixed cows and hopefully Merasmus/ammopacks/healthpacks not spawning, fixed typos, optimized code, created more fallbacks, removed unfinished code, made some messages more verbose, and added more invalid checks.
 */
