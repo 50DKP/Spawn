@@ -4,10 +4,12 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.0.0 RC 5"
+			"Latest"	"1.0.0 Beta 21"
 		}
-		"Notes"	"Cleaned up the help command."
-		"Notes"	"Added CShowActivity2."
+		"Notes"	"Fixed m_hOwnerEntity"
+		"Notes"	"Fixed CShowActivity2 by removing CPrintToChatAll in most places"
+		"Notes"	"Fixed improper sentry ammo values"
+		"Notes"	"Added amount argument to spawn_remove"
 	}
 
 	"Files"

@@ -14,7 +14,7 @@
 #include <adminmenu>
 #include <updater>
 
-#define PLUGIN_VERSION "1.0.0 Beta 20"
+#define PLUGIN_VERSION "1.0.0 Beta 21"
 #define MAXENTITIES 256
 #define UPDATE_URL "https://bitbucket.org/50Wliu/spawn/raw/a674edf4f825ef5d5e2c23fc636484d3fa7300f5/tf/addons/sourcemod/update.txt"
 
@@ -47,7 +47,7 @@ public OnPluginStart()
 
 	RegAdminCmd("spawn", Command_Spawn, ADMFLAG_GENERIC, "Manually choose an entity to spawn!  Usage: spawn <entity> <level/health>.  0 arguments will bring up the menu.  Use spawn_help to see the list of entities.");
 	RegAdminCmd("spawn_menu", Command_Menu, ADMFLAG_GENERIC, "Bring up the menu!");
-	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim>.");
+	RegAdminCmd("spawn_remove", Command_Remove, ADMFLAG_GENERIC, "Remove an entity!  Usage: spawn_remove <entity|aim> <amount>.");
 	RegAdminCmd("spawn_help", Command_Spawn_Help, ADMFLAG_GENERIC, "Need some help?  Come here!  Usage: spawn_help <entity>.  0 arguments will bring up the generic help text.");
 
 	MerasmusBaseHP=FindConVar("tf_merasmus_health_base");
@@ -236,11 +236,11 @@ stock Command_Spawn_Cow(client)
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	SetEntityMoveType(entity, MOVETYPE_VPHYSICS);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
 	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a cow!");
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a cow.");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N Spawned a cow!", client);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a cow", client);
 	return;
 }
@@ -258,11 +258,11 @@ stock Command_Spawn_Explosive_Barrel(client)
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
 	SetEntityMoveType(entity, MOVETYPE_VPHYSICS);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	SetEntProp(entity, Prop_Data, "m_CollisionGroup", 5);
 	//SetEntProp(entity, Prop_Data, "m_nSolidType", 6);  //Not working
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned an explosive barrel!");
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned an explosive barrel.");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned an explosive barrel!", client);
 	LogAction(client, client, "[Spawn] \"%L\" spawned an explosive barrel", client);
 	return;
 }
@@ -298,10 +298,10 @@ stock Command_Spawn_Ammopack(client, String:size[128])
 	DispatchSpawn(entity);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s ammopack!", size);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a %s ammopack.", size);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a %s ammopack!", client, size);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a %s ammopack", client, size);
 }
 
@@ -336,10 +336,10 @@ stock Command_Spawn_Healthpack(client, String:size[128])
 	DispatchSpawn(entity);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	EmitSoundToAll("items/spawn_item.wav", entity, _, _, _, 0.75);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a %s healthpack!", size);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned %s healthpack.", size);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%s spawned %s healthpack!", client, size);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a %s healthpack", client, size);
 }
 
@@ -350,7 +350,7 @@ stock Command_Spawn_Sentry(client, level=1)
 	GetClientEyeAngles(client, angles);
 	angles[0]=0.0;
 	decl String:model[64];
-	new shells, health, rockets;
+	new bullets, health, rockets;
 	new team=GetClientTeam(client);
 	new skin=team-2;
 	if(team==_:TFTeam_Spectator)
@@ -364,19 +364,19 @@ stock Command_Spawn_Sentry(client, level=1)
 		case 1:
 		{
 			model="models/buildables/sentry1.mdl";
-			shells=100;
+			bullets=150;
 			health=150;
 		}
 		case 2:
 		{
 			model="models/buildables/sentry2.mdl";
-			shells=120;
+			bullets=200;
 			health=180;
 		}
 		case 3:
 		{
 			model="models/buildables/sentry3.mdl";
-			shells=144;
+			bullets=200;
 			health=216;
 			rockets=20;
 		}
@@ -385,7 +385,7 @@ stock Command_Spawn_Sentry(client, level=1)
 			CPrintToChat(client, "{Vintage}[Spawn]{Default} Haha, no.  The sentry's level has been set to 1.  Good try though.");
 			level=1;
 			model="models/buildables/sentry1.mdl";
-			shells=100;
+			bullets=150;
 			health=150;
 		}
 	}
@@ -400,7 +400,7 @@ stock Command_Spawn_Sentry(client, level=1)
 	TeleportEntity(entity, position, angles, NULL_VECTOR);
 	SetEntityModel(entity, model);
 
-	SetEntProp(entity, Prop_Send, "m_iAmmoShells", shells);
+	SetEntProp(entity, Prop_Send, "m_iAmmoShells", bullets);
 	SetEntProp(entity, Prop_Send, "m_iHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iMaxHealth", health);
 	SetEntProp(entity, Prop_Send, "m_iObjectType", _:TFObject_Sentry);
@@ -429,8 +429,7 @@ stock Command_Spawn_Sentry(client, level=1)
 	}
 	SetEntData(entity, offs-12, 1, 1, true);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i sentry!", level);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i sentry.", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a level %i sentry!", client, level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i sentry", client, level);
 	return;
 }
@@ -519,8 +518,7 @@ stock Command_Spawn_Dispenser(client, level=1)
 	}
 	SetEntData(entity, offs-12, 1, 1, true);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i dispenser!", level);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i dispenser.", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a level %i dispenser!", client, level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i dispenser", client, level);
 	return;
 }
@@ -558,9 +556,9 @@ stock Command_Spawn_Merasmus(client, health=-131313)
 	}
 	DispatchSpawn(entity);
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned Merasmus with %i health!", health);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned Merasmus with %i health.", health);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned Merasmus with %i health!", client, health);
 	LogAction(client, client, "[Spawn] \"%L\" spawned Merasmus with %i health", client, health);
 	return;
 }
@@ -594,7 +592,7 @@ stock Command_Spawn_Monoculus(client, level=1)
 		}
 		SetEntProp(entity, Prop_Data, "m_iMaxHealth", HP);
 		SetEntProp(entity, Prop_Data, "m_iHealth", HP);
-		letsChangeThisEvent=level;
+		SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	}
 	else if(level<=0)
 	{
@@ -604,9 +602,9 @@ stock Command_Spawn_Monoculus(client, level=1)
 	DispatchSpawn(entity);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a level %i Monoculus!", level);
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a level %i Monoculus.", level);
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a level %i Monoculus!", client, level);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a level %i Monoculus", client, level);
 	return;
 }
@@ -622,9 +620,9 @@ stock Command_Spawn_Horsemann(client)
 	DispatchSpawn(entity);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned the Horseless Headless Horsemann!");
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned the Horseless Headless Horsemann.");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned the Horseless Headless Horsemann!", client);
 	LogAction(client, client, "[Spawn] \"%L\" spawned the Horseless Headless Horsemann", client);
 	return;
 }
@@ -640,9 +638,9 @@ stock Command_Spawn_Tank(client)
 	DispatchSpawn(entity);
 	position[2] -= 10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 
-	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a tank!");
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a tank.");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a tank!", client);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a tank", client);
 	return;
 }
@@ -658,9 +656,10 @@ stock Command_Spawn_Skeleton(client)
 	DispatchSpawn(entity);
 	position[2]-=10.0;
 	TeleportEntity(entity, position, NULL_VECTOR, NULL_VECTOR);
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 
 	CPrintToChat(client, "{Vintage}[Spawn]{Default} You spawned a skeleton!");
-	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Spawned a skeleton.");
+	CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N spawned a skeleton!", client);
 	LogAction(client, client, "[Spawn] \"%L\" spawned a skeleton", client);
 	return;
 }
@@ -675,11 +674,24 @@ public Action:Command_Remove(client, args)
 	}
 	
 	new String:selection[128]="aim";
+	new String:amountString[128]="0";
+	new amount;
 	if(args==1)
 	{
 		GetCmdArg(1, selection, sizeof(selection));
 	}
-	else if(args>1)
+	else if(args==2)
+	{
+		GetCmdArg(1, selection, sizeof(selection));
+		GetCmdArg(2, amountString, sizeof(amountString));
+		amount=StringToInt(amountString);
+		if(amount<0)
+		{
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} The amount must be at least 0!");
+			return Plugin_Handled;
+		}
+	}
+	else
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Usage: spawn_remove <entity|aim>");
 		return Plugin_Handled;
@@ -703,15 +715,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed your only cow!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed his/her only cow.");
-				LogAction(client, client, "[Spawn] \"%L\" slayed his/her only cow", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed one cow!", client);
+				LogAction(client, client, "[Spawn] \"%L\" slayed one cow", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i of your cows!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i of his/her cows.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed all %i of his/her cows", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed %i cows!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i cows", client, count);
 			}
 			count=0;
 		}
@@ -737,15 +747,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed your only explosive barrel!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed his/her only explosive barrel.");
-				LogAction(client, client, "[Spawn] \"%L\" removed his/her only explosive barrel", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed one explosive barrel!", client);
+				LogAction(client, client, "[Spawn] \"%L\" removed one explosive barrel", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i of your explosive barrels!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i of his/her explosive barrels.", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed all %i of his/her explosive barrels", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed %i explosive barrels!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" removed %i explosive barrels", client, count);
 			}
 			count=0;
 		}
@@ -771,15 +779,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed your only ammopack!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed his/her only ammopack.", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed his/her only ammopack", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed one ammopack!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" removed one ammopack", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i of your ammopacks!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i of his/her ammopacks.", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed all %i of his/her ammopacks", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed %i ammopacks!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" removed %i ammopacks", client, count);
 			}
 			count=0;
 		}
@@ -805,15 +811,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed your only healthpack!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed his/her healthpack.");
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed one healthpack!", client);
 				LogAction(client, client, "[Spawn] \"%L\" removed his/her healthpack", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed all %i of your healthpacks!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed all %i of his/her healthpacks.", count);
-				LogAction(client, client, "[Spawn] \"%L\" removed all %i of his/her healthpacks", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed %i healthpacks!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" removed %i healthpacks", client, count);
 			}
 			count=0;
 		}
@@ -839,15 +843,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed your only sentry!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed his/her only sentry.");
-				LogAction(client, client, "[Spawn] \"%L\" destroyed his/her only sentry", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed one sentry.", client);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed one sentry", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i of your sentries!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i of his/her sentries.", count);
-				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i of his/her sentries", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed %i sentries.", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed %i sentries", client, count);
 			}
 			count=0;
 		}
@@ -873,15 +875,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed your only dispenser!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed his/her only dispenser.", count);
-				LogAction(client, client, "[Spawn] \"%L\" destroyed his/her only dispenser", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed one dispenser!", client);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed one dispenser", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i of your dispensers!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i of his/her dispensers.", count);
-				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i of his/her dispensers", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed %i dispensers!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed %i dispensers", client, count);
 			}
 			count=0;
 		}
@@ -909,15 +909,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed your only Merasmus!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed his/her only Merasmus.");
-				LogAction(client, client, "[Spawn] \"%L\" slayed his/her only Merasmus", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed one Merasmus!", client);
+				LogAction(client, client, "[Spawn] \"%L\" slayed one Merasmus", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i of your Merasmuses!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i of his/her Merasmuses.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed all %i of his/her Merasmuses", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed %i Merasmuses!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i Merasmuses", client, count);
 			}
 			count=0;
 		}
@@ -945,15 +943,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed your only Monoculus!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed his/her Monoculus.", count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed one Monoculus!", client);
 				LogAction(client, client, "[Spawn] \"%L\" slayed his/her Monoculus", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i of your Monoculuses!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i of his/her Monoculuses.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed all %i of his/her Monoculuses", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed %i Monoculuses!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i Monoculuses", client, count);
 			}
 			count=0;
 		}
@@ -981,15 +977,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed your only Horseless Headless Horsemann!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed his/her only Horseless Headless Horsemann.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed his/her only Horseless Headless Horsemann", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed one Horseless Headless Horsemann!", client);
+				LogAction(client, client, "[Spawn] \"%L\" slayed one Horseless Headless Horsemann", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i of your Horseless Headless Horsemenn!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i of his/her Horselss Headless Horsemenn.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed all %i of his/her Horseless Headless Horsemenn", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed %i Horselss Headless Horsemenn!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i Horseless Headless Horsemenn", client, count);
 			}
 			count=0;
 		}
@@ -1015,15 +1009,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed your only tank!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed his/her only tank.");
-				LogAction(client, client, "[Spawn] \"%L\" destroyed his/her only tank", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed one tank!", client);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed one tank", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You destroyed all %i of your tanks!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Destroyed all %i of his/her tanks.", count);
-				LogAction(client, client, "[Spawn] \"%L\" destroyed all %i of his/her tanks", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N destroyed %i tanks!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" destroyed %i tanks", client, count);
 			}
 			count=0;
 		}
@@ -1049,15 +1041,13 @@ public Action:Command_Remove(client, args)
 		{
 			if(count==1)
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed your only skeleton!");
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed his/her only skeleton.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed his/her only skeleton", client);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed one skeleton!", client);
+				LogAction(client, client, "[Spawn] \"%L\" slayed one skeleton", client);
 			}
 			else
 			{
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You slayed all %i of your skeletons!", count);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Slayed all %i of his/her skeletons.", count);
-				LogAction(client, client, "[Spawn] \"%L\" slayed all %i of his/her skeletons", client, count);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N slayed %i skeletons!", client, count);
+				LogAction(client, client, "[Spawn] \"%L\" slayed %i skeletons", client, count);
 			}
 			count=0;
 		}
@@ -1078,6 +1068,7 @@ public Action:Command_Remove(client, args)
 		entity=GetClientAimTarget(client, false);
 		if(!IsValidEntity(entity))
 		{
+			CPrintToChat(client, "{Vintage}[Spawn]{Default} {Black}DEBUG:{Default} Entity is %i", entity);
 			CPrintToChat(client, "{Vintage}[Spawn]{Default} No valid entity found at aim.");
 			return Plugin_Handled;
 		}
@@ -1088,8 +1079,7 @@ public Action:Command_Remove(client, args)
 			{
 				SetVariantInt(9999);
 				AcceptEntityInput(entity, "RemoveHealth");
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed a building (entity %i)!", entity);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed a building (entity %i).", entity);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed a building (entity %i)!", client, entity);
 				LogAction(client, client, "[Spawn] \"%L\" removed a building (entity %i)", client, entity);
 				return Plugin_Handled;
 			}
@@ -1105,8 +1095,7 @@ public Action:Command_Remove(client, args)
 			{
 				SetVariantInt(9999);
 				AcceptEntityInput(entity, "Kill");
-				CPrintToChat(client, "{Vintage}[Spawn]{Default} You removed an entity (entity %i)!", entity);
-				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "Removed an entity (entity %i).", entity);
+				CShowActivity2(client, "{Vintage}[Spawn]{Default} ", "%N removed an entity (entity %i)!", client, entity);
 				LogAction(client, client, "[Spawn] \"%L\" removed an entity (entity %i)", client, entity);
 				return Plugin_Handled;
 			}
@@ -1388,11 +1377,11 @@ public OnEntityCreated(entity, const String:classname[])
 
 stock SetEffects()
 {
-	new i=-1;
-	while((i=FindEntityByClassname(i, "merasmus"))!=-1 && IsValidEntity(i))
+	new entity=-1;
+	while((entity=FindEntityByClassname(entity, "merasmus"))!=-1 && IsValidEntity(entity))
 	{
-		SetEntPropFloat(i, Prop_Send, "m_flModelScale", 1.0);
-		SetEntProp(i, Prop_Send, "m_bGlowEnabled", 0.0);
+		SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 1.0);
+		SetEntProp(entity, Prop_Send, "m_bGlowEnabled", 0.0);
 	}
 }
 
@@ -1934,7 +1923,7 @@ public Action:Command_Spawn_Help(client, args)
 	else
 	{
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Available entities: cow, explosive_barrel, ammopack <large|medium|small>, healthpack <large|medium|small>, sentry <level>, dispenser <level>, merasmus <health>, monoculus <level>, hhh, tank, skeleton");
-		CPrintToChat(client, "{Vintage}[Spawn]{Default} Need to remove something?  Try {Skyblue}spawn_remove <entity|aim>{Default}!");
+		CPrintToChat(client, "{Vintage}[Spawn]{Default} Need to remove something?  Try {Skyblue}spawn_remove <entity|aim> <amount>{Default}!");
 		CPrintToChat(client, "{Vintage}[Spawn]{Default} Still confused?  Type {Skyblue}spawn_menu{Default} to bring up the menu!  You could also try {Skyblue}spawn_help <entity>{Default}.");
 		return Plugin_Handled;
 	}
@@ -1943,7 +1932,8 @@ public Action:Command_Spawn_Help(client, args)
 /*
 CHANGELOG:
 ----------
-1.0.0 Beta 20 (November 24, 2013 A.D.): Fixed sentries always being on RED team, removed minisentries, and downgraded release status.
+1.0.0 Beta 21 (January 2, 2014 A.D.): Fixed m_hOwnerEntity, fixed CShowActivity2 by removing CPrintToChat, fixed improper sentry ammo values, and added an amount argument to spawn_remove.
+1.0.0 Beta 20 (November 24, 2013 A.D.): Fixed sentries always being on RED team, removed minisentries, fixed buildings spawning at impossible angles, and downgraded release status.
 1.0.0 Beta 19 (November 19, 2013 A.D.): Added m_hOwnerEntity check before removing non-building entities.
 1.0.0 Beta 18 (November 18, 2013 A.D.): Cleaned up the help command and added CShowActivity2.
 1.0.0 Beta 17 (November 16, 2013 A.D.): Changed spawn zombie command to spawn skeleton, as zombies are now skeletons.  Removed Precache_Zombie() as it's no longer needed.  Fixed RED not being able to remove sentries or dispensers.  Addd yet another speculative fix for sentries/dispensers.  Fixed Merasmus's HP always being set to the default value.  Changed Updater link to BitBucket.
