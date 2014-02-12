@@ -1,7 +1,7 @@
 Spawn
 =====
 
-**LATEST VERSION:  1.0.0 RC 5**
+**LATEST VERSION:  1.0.0 Beta 22**
 
 A plugin for TF2 that allows admins to spawn a bunch of entities (and then remove them) without turning on cheats.
 
@@ -13,7 +13,7 @@ Required:
 Recommended:
 * [Updater](http://forums.alliedmods.net/showthread.php?t=169095)
 
-Community website:  [www.50dkp.com](http://www.50dkp.com)
+Community website: [www.50dkp.com](http://www.50dkp.com)
 
 List of supported entities:
 * cow
@@ -28,4 +28,4 @@ List of supported entities:
 * tank
 * skeleton
 
-[Link to update.txt](/tf/addons/sourcemod/update.txt)
+[Link to update.txt](/addons/sourcemod/update.txt)
