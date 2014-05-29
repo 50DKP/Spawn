@@ -43,7 +43,6 @@
 
 #SOURCEMOD PLUGINS
 /addons/sourcemod/plugins/*
-!/addons/sourcemod/plugins/spawn.smx
 
 #SOURCEMOD SOURCE FILES
 /addons/sourcemod/scripting/*
